@@ -1,0 +1,92 @@
+@import 'katex/dist/katex.min.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 250 250 249;
+  --surface: 255 255 255;
+  --raised: 244 244 242;
+  --line: 228 228 224;
+  --fg: 24 24 27;
+  --muted: 102 102 110;
+  --faint: 161 161 170;
+  --accent: 47 91 234;
+  --accent-fg: 255 255 255;
+  --good: 22 133 92;
+  --warn: 196 120 10;
+  --bad: 205 55 55;
+  color-scheme: light;
+}
+[data-theme='dark'] {
+  --bg: 17 17 19;
+  --surface: 24 24 27;
+  --raised: 34 34 38;
+  --line: 46 46 52;
+  --fg: 236 236 240;
+  --muted: 160 160 170;
+  --faint: 106 106 116;
+  --accent: 106 142 255;
+  --accent-fg: 12 14 24;
+  --good: 74 190 140;
+  --warn: 232 167 70;
+  --bad: 240 110 110;
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+body { @apply bg-bg text-fg font-sans antialiased; }
+* { @apply border-line; }
+::selection { background: rgb(var(--accent) / 0.25); }
+:focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 1px; }
+button, a, input, select, textarea { transition: background-color 120ms, border-color 120ms, color 120ms, opacity 120ms; }
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-1.5 rounded border border-line bg-surface px-3 h-8 text-sm font-medium text-fg hover:bg-raised disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none; }
+  .btn-primary { @apply border-transparent bg-accent text-accent-fg hover:bg-accent hover:opacity-90; }
+  .btn-ghost { @apply border-transparent bg-transparent hover:bg-raised; }
+  .btn-danger { @apply text-bad hover:bg-bad/10; }
+  .btn-lg { @apply h-11 px-5 text-base; }
+  .btn-icon { @apply px-0 w-8; }
+  .field { @apply w-full rounded border border-line bg-surface px-2.5 py-1.5 text-sm placeholder:text-faint focus:border-accent focus:outline-none; }
+  .label { @apply mb-1 block text-xs font-medium text-muted; }
+  .card { @apply rounded-lg border border-line bg-surface; }
+  .h-page { @apply text-xl font-semibold tracking-tight; }
+  .h-section { @apply text-sm font-semibold; }
+}
+.tabnum { font-variant-numeric: tabular-nums; }
+
+/* Markdown content */
+.prose-recall { @apply text-base leading-relaxed break-words; }
+.prose-recall > :first-child { margin-top: 0; }
+.prose-recall > :last-child { margin-bottom: 0; }
+.prose-recall h1 { @apply text-xl font-semibold mt-5 mb-2; }
+.prose-recall h2 { @apply text-lg font-semibold mt-4 mb-2; }
+.prose-recall h3 { @apply text-base font-semibold mt-3 mb-1.5; }
+.prose-recall p { @apply my-2.5; }
+.prose-recall ul { @apply my-2.5 list-disc ps-5; }
+.prose-recall ol { @apply my-2.5 list-decimal ps-5; }
+.prose-recall li { @apply my-0.5; }
+.prose-recall a { @apply text-accent underline underline-offset-2; }
+.prose-recall blockquote { @apply my-3 border-s-2 border-line ps-3 text-muted; }
+.prose-recall code { @apply rounded bg-raised px-1 py-0.5 font-mono text-[0.9em]; }
+.prose-recall pre { @apply my-3 overflow-x-auto rounded-lg border border-line bg-raised p-3 text-sm; }
+.prose-recall pre code { @apply bg-transparent p-0; }
+.prose-recall table { @apply my-3 w-full border-collapse text-sm; }
+.prose-recall th, .prose-recall td { @apply border border-line px-2.5 py-1.5 text-start; }
+.prose-recall th { @apply bg-raised font-semibold; }
+.prose-recall img { @apply my-2 max-h-96 rounded border border-line; }
+.prose-recall hr { @apply my-4; }
+.prose-recall .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+.hljs-comment, .hljs-quote { color: rgb(var(--faint)); }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal { color: rgb(var(--accent)); }
+.hljs-string, .hljs-attr, .hljs-number { color: rgb(var(--good)); }
+.hljs-title, .hljs-built_in, .hljs-function { color: rgb(var(--warn)); }
+
+.safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Student portal: larger reading size */
+.student-portal { font-size: 15px; }
+.student-portal .prose-recall { font-size: 17px; line-height: 1.85; }
+.student-portal .prose-recall table { font-size: 15px; }

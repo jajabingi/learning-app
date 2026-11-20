@@ -1,0 +1,15 @@
+# secrets and local data
+.env
+backend/.env
+*.db
+backend/uploads/
+# dependencies / build output
+node_modules/
+frontend/dist/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+# scratch
+.scratch/
+*.log
