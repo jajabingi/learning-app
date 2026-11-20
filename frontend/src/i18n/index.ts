@@ -20,3 +20,18 @@ export function t(key: string, vars?: Record<string, string | number>): string {
 export function tError(msg: string): string {
   return messages.errors[msg] ?? msg
 }
+
+/**
+ * gettext-style translation for the teacher workspace: the English source text IS the key, so every string stays
+ * readable in the code, a missing translation falls back to English, and an English UI needs no dictionary at all.
+ * `{name}` placeholders are filled from `vars`.
+ */
+import { teachHe } from './teach.he'
+export function tt(text: string, vars?: Record<string, string | number>): string {
+  let s = lang === 'he' ? (teachHe[text] ?? text) : text
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v))
+  return s
+}
+export function tl(word: string): string {
+  return tt(word.replace(/_/g, ' ').replace(/(^|\s)\w/g, (c) => c.toUpperCase()))
+}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { tt } from '@/i18n'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, CheckCircle2, ChevronLeft, ChevronRight, Circle, Menu as MenuIcon } from 'lucide-react'
 import { get, post } from '@/api/client'
@@ -28,7 +29,7 @@ export function CourseViewer({ course, lessonPath, showDraftFlags, student, init
 
   const menu = (
     <nav aria-label={t('viewer.curriculumBtn')} className="space-y-3">
-      {student && p && <div className="px-2"><div className="mb-1 flex justify-between text-xs text-muted tabnum"><span>{t('viewer.progress')}</span><span>{p.percent}%</span></div><ProgressBar value={p.percent / 100} tone="accent" label="Course progress" /></div>}
+      {student && p && <div className="px-2"><div className="mb-1 flex justify-between text-xs text-muted tabnum"><span>{t('viewer.progress')}</span><span>{p.percent}%</span></div><ProgressBar value={p.percent / 100} tone="accent" label={tt("Course progress")} /></div>}
       <button className={cx('block w-full rounded px-2.5 py-2 text-start text-[16px] leading-6 font-medium', !sel ? 'bg-raised' : 'hover:bg-raised/70')} onClick={() => { setSel(null); setNav(false) }}>{t('viewer.overview')}</button>
       {course.curriculum.map((m) => (
         <div key={m.id}>
@@ -69,7 +70,7 @@ function Overview({ course, onStart, student }: { course: CourseLike; onStart(id
     <div className="space-y-5">
       <div><h2 dir="auto" className="text-2xl font-semibold tracking-tight">{course.title}</h2>{course.subtitle && <p className="mt-1 text-muted">{course.subtitle}</p>}{course.instructor_name && <p dir="auto" className="mt-1 text-sm text-muted">{t('course.by')} {course.instructor_name}</p>}</div>
       {student && p && (
-        <div className="card p-4"><div className="mb-1 flex justify-between text-sm"><span className="font-medium">{t('viewer.percentDone', { n: p.percent })}</span><span className="text-muted tabnum">{t('viewer.lessonsStudied', { a: p.completed_lessons, b: p.total_lessons, t: duration(p.time_spent_seconds) })}</span></div><ProgressBar value={p.percent / 100} tone="accent" label="Course progress" />
+        <div className="card p-4"><div className="mb-1 flex justify-between text-sm"><span className="font-medium">{t('viewer.percentDone', { n: p.percent })}</span><span className="text-muted tabnum">{t('viewer.lessonsStudied', { a: p.completed_lessons, b: p.total_lessons, t: duration(p.time_spent_seconds) })}</span></div><ProgressBar value={p.percent / 100} tone="accent" label={tt("Course progress")} />
           {p.percent >= 100 && <p className="mt-2 text-sm text-good">{t('viewer.courseCompleted')}</p>}</div>
       )}
       {course.description && <Markdown>{course.description}</Markdown>}

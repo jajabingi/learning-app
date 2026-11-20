@@ -6,17 +6,18 @@ import { useAiStatus } from '@/hooks/queries'
 import { Markdown } from './Markdown'
 import { Button, Spinner } from './ui'
 import { TopicPicker } from './TopicPicker'
+import { tt } from '@/i18n'
 
 const ACTIONS: { id: string; label: string; needsOther?: boolean; needsAnswer?: boolean }[] = [
-  { id: 'explain', label: 'Explain this concept' },
-  { id: 'simpler', label: 'Explain more simply' },
-  { id: 'advanced', label: 'Explain at an advanced level' },
-  { id: 'example', label: 'Real-world example' },
-  { id: 'harder_question', label: 'Create a harder question' },
-  { id: 'step_by_step', label: 'Step-by-step solution' },
-  { id: 'explain_mistake', label: 'Explain my mistake', needsAnswer: true },
-  { id: 'compare', label: 'Compare with another topic', needsOther: true },
-  { id: 'connect', label: 'Connect to another topic', needsOther: true },
+  { id: 'explain', label: tt("Explain this concept") },
+  { id: 'simpler', label: tt("Explain more simply") },
+  { id: 'advanced', label: tt("Explain at an advanced level") },
+  { id: 'example', label: tt("Real-world example") },
+  { id: 'harder_question', label: tt("Create a harder question") },
+  { id: 'step_by_step', label: tt("Step-by-step solution") },
+  { id: 'explain_mistake', label: tt("Explain my mistake"), needsAnswer: true },
+  { id: 'compare', label: tt("Compare with another topic"), needsOther: true },
+  { id: 'connect', label: tt("Connect to another topic"), needsOther: true },
 ]
 
 interface Msg { who: 'you' | 'ai'; text: string }
@@ -34,40 +35,40 @@ export function Tutor({ questionId, topicId, userAnswer }: { questionId?: string
       post<{ reply: string }>('/ai/tutor', { action: v.action, question_id: questionId ?? null, topic_id: topicId ?? null, other_topic_id: other[0] ?? null, user_answer: userAnswer ?? '', message: v.message ?? '' }),
     onMutate: (v) => { setError(''); setPending(v.label); setLog((l) => [...l, { who: 'you', text: v.label }]) },
     onSuccess: (r) => setLog((l) => [...l, { who: 'ai', text: r.reply }]),
-    onError: (e) => { setError(e instanceof Error ? e.message : 'Tutor unavailable'); setLog((l) => l.slice(0, -1)) },
+    onError: (e) => { setError(e instanceof Error ? e.message : tt("Tutor unavailable")); setLog((l) => l.slice(0, -1)) },
     onSettled: () => setPending(null),
   })
 
   if (status.data && !status.data.enabled) {
-    return <p className="text-sm text-muted">The AI tutor needs an API key on the server (<code className="font-mono">ANTHROPIC_API_KEY</code>).</p>
+    return <p className="text-sm text-muted">{tt("The AI tutor needs an API key on the server (")}<code className="font-mono">ANTHROPIC_API_KEY</code>).</p>
   }
   const needsOther = ACTIONS.some((a) => a.needsOther)
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-1.5">
         {ACTIONS.filter((a) => !a.needsAnswer || userAnswer?.trim()).map((a) => (
-          <button key={a.id} className="btn h-7 px-2 text-xs" disabled={ask.isPending || (a.needsOther && !other.length)} title={a.needsOther && !other.length ? 'Pick another topic below first' : undefined} onClick={() => ask.mutate({ action: a.id, label: a.label })}>
+          <button key={a.id} className="btn h-7 px-2 text-xs" disabled={ask.isPending || (a.needsOther && !other.length)} title={a.needsOther && !other.length ? tt("Pick another topic below first") : undefined} onClick={() => ask.mutate({ action: a.id, label: a.label })}>
             {a.label}
           </button>
         ))}
       </div>
       {needsOther && (
-        <div><span className="label">Other topic (for compare / connect)</span><TopicPicker single value={other} onChange={setOther} /></div>
+        <div><span className="label">{tt("Other topic (for compare / connect)")}</span><TopicPicker single value={other} onChange={setOther} /></div>
       )}
       <div className="space-y-2">
         {log.map((m, i) => (
-          <div key={i} className={m.who === 'you' ? 'text-right' : ''}>
+          <div key={i} className={m.who === 'you' ? 'text-end' : ''}>
             {m.who === 'you' ? <span className="inline-block rounded-lg bg-accent/10 px-2.5 py-1 text-sm text-accent">{m.text}</span> : <div className="rounded-lg border border-line bg-bg p-3"><Markdown>{m.text}</Markdown></div>}
           </div>
         ))}
-        {pending && <div className="flex items-center gap-2 text-sm text-muted"><Spinner /> Thinking…</div>}
+        {pending && <div className="flex items-center gap-2 text-sm text-muted"><Spinner /> {tt("Thinking…")}</div>}
         {error && <p role="alert" className="text-sm text-bad">{error}</p>}
       </div>
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); const m = msg.trim(); if (m) { ask.mutate({ action: 'ask', message: m, label: m }); setMsg('') } }}>
-        <input className="field" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Ask a follow-up…" maxLength={4000} aria-label="Ask the tutor" />
-        <Button type="submit" className="btn-primary" disabled={!msg.trim() || ask.isPending} aria-label="Send"><Send size={14} /></Button>
+        <input className="field" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder={tt("Ask a follow-up…")} maxLength={4000} aria-label={tt("Ask the tutor")} />
+        <Button type="submit" className="btn-primary" disabled={!msg.trim() || ask.isPending} aria-label={tt("Send")}><Send size={14} /></Button>
       </form>
-      {!log.length && <p className="flex items-center gap-1 text-xs text-faint"><Sparkles size={12} /> Answers are generated by AI and can be wrong — verify important facts.</p>}
+      {!log.length && <p className="flex items-center gap-1 text-xs text-faint"><Sparkles size={12} /> {tt("Answers are generated by AI and can be wrong — verify important facts.")}</p>}
     </div>
   )
 }

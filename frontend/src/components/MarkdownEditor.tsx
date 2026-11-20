@@ -4,6 +4,8 @@ import { api } from '@/api/client'
 import { useToast } from '@/contexts/toast'
 import { Markdown } from './Markdown'
 import { Segmented, cx } from './ui'
+import { tt } from '@/i18n'
+
 
 interface Props {
   value: string
@@ -63,22 +65,22 @@ export function MarkdownEditor({ value, onChange, placeholder, minRows = 6, labe
       const isImg = /\.(png|jpe?g|gif|webp)$/i.test(a.filename)
       edit((sel, b, af) => ({ text: b + `${isImg ? '!' : ''}[${sel || a.filename}](${a.url})` + af }))
     } catch (e) {
-      toast.err(e instanceof Error ? e.message : 'Upload failed')
+      toast.err(e instanceof Error ? e.message : tt("Upload failed"))
     }
   }
 
   const tools = [
-    { i: Heading2, t: 'Heading', f: linePrefix('## ') },
-    { i: Bold, t: 'Bold', f: wrap('**') },
-    { i: Italic, t: 'Italic', f: wrap('*') },
-    { i: List, t: 'Bulleted list', f: linePrefix('- ') },
-    { i: ListOrdered, t: 'Numbered list', f: linePrefix('1. ') },
-    { i: Quote, t: 'Quote', f: linePrefix('> ') },
-    { i: Code, t: 'Inline code', f: wrap('`', '`', 'code') },
-    { i: SquareCode, t: 'Code block', f: block('```python\n', '\n```\n', 'code') },
-    { i: Sigma, t: 'Math (LaTeX)', f: wrap('$', '$', 'x^2') },
-    { i: Table2, t: 'Table', f: block('| A | B |\n| --- | --- |\n| ', ' | |\n', '1') },
-    { i: Link2, t: 'Link', f: () => edit((sel, b, a) => ({ text: b + `[${sel || 'text'}](https://)` + a })) },
+    { i: Heading2, t: tt("Heading"), f: linePrefix('## ') },
+    { i: Bold, t: tt("Bold"), f: wrap('**') },
+    { i: Italic, t: tt("Italic"), f: wrap('*') },
+    { i: List, t: tt("Bulleted list"), f: linePrefix('- ') },
+    { i: ListOrdered, t: tt("Numbered list"), f: linePrefix('1. ') },
+    { i: Quote, t: tt("Quote"), f: linePrefix('> ') },
+    { i: Code, t: tt("Inline code"), f: wrap('`', '`', 'code') },
+    { i: SquareCode, t: tt("Code block"), f: block('```python\n', '\n```\n', 'code') },
+    { i: Sigma, t: tt("Math (LaTeX)"), f: wrap('$', '$', 'x^2') },
+    { i: Table2, t: tt("Table"), f: block('| A | B |\n| --- | --- |\n| ', ' | |\n', '1') },
+    { i: Link2, t: tt("Link"), f: () => edit((sel, b, a) => ({ text: b + `[${sel || 'text'}](https://)` + a })) },
   ]
 
   return (
@@ -90,19 +92,19 @@ export function MarkdownEditor({ value, onChange, placeholder, minRows = 6, labe
               <I size={14} />
             </button>
           ))}
-          <button type="button" title="Insert image or file" aria-label="Insert image or file" className="btn btn-ghost btn-icon h-7 w-7 text-muted" onClick={() => fileRef.current?.click()} disabled={view === 'preview'}>
+          <button type="button" title={tt("Insert image or file")} aria-label={tt("Insert image or file")} className="btn btn-ghost btn-icon h-7 w-7 text-muted" onClick={() => fileRef.current?.click()} disabled={view === 'preview'}>
             <ImageIcon size={14} />
           </button>
           <input ref={fileRef} type="file" hidden accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,text/plain,text/csv" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = '' }} />
         </div>
-        <Segmented<'write' | 'preview'> value={view} onChange={setView} label="Editor view" options={[{ value: 'write', label: 'Write' }, { value: 'preview', label: 'Preview' }]} />
+        <Segmented<'write' | 'preview'> value={view} onChange={setView} label={tt("Editor view")} options={[{ value: 'write', label: tt("Write") }, { value: 'preview', label: tt("Preview") }]} />
       </div>
       {view === 'write' ? (
         <textarea
           ref={ta}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder ?? 'Markdown supported · $LaTeX$ · tables · code'}
+          placeholder={placeholder ?? tt("Markdown supported · $LaTeX$ · tables · code")}
           rows={minRows}
           aria-label={label}
           dir="auto"
@@ -114,7 +116,7 @@ export function MarkdownEditor({ value, onChange, placeholder, minRows = 6, labe
         />
       ) : (
         <div className={cx('px-3 py-2')} style={{ minHeight: `${minRows * 1.6}rem` }}>
-          {value.trim() ? <Markdown>{value}</Markdown> : <p className="text-sm text-faint">Nothing to preview</p>}
+          {value.trim() ? <Markdown>{value}</Markdown> : <p className="text-sm text-faint">{tt("Nothing to preview")}</p>}
         </div>
       )}
     </div>

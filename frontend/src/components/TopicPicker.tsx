@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { useTopicList } from '@/hooks/queries'
+import { tt } from '@/i18n'
 
-export function TopicPicker({ value, onChange, subjectId, single, placeholder = 'Search topics…' }: { value: string[]; onChange(v: string[]): void; subjectId?: string | null; single?: boolean; placeholder?: string }) {
+export function TopicPicker({ value, onChange, subjectId, single, placeholder = tt('Search topics…') }: { value: string[]; onChange(v: string[]): void; subjectId?: string | null; single?: boolean; placeholder?: string }) {
   const { data = [] } = useTopicList()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
@@ -26,19 +27,19 @@ export function TopicPicker({ value, onChange, subjectId, single, placeholder = 
       <div className="flex flex-wrap items-center gap-1 rounded border border-line bg-surface px-1.5 py-1 focus-within:border-accent" onClick={() => setOpen(true)}>
         {value.map((id) => (
           <span key={id} className="inline-flex max-w-full items-center gap-1 rounded bg-accent/10 px-1.5 py-0.5 text-xs text-accent">
-            <span className="truncate">{byId.get(id)?.name ?? 'Topic'}</span>
-            <button type="button" aria-label="Remove topic" onClick={(e) => { e.stopPropagation(); onChange(value.filter((x) => x !== id)) }}><X size={11} /></button>
+            <span className="truncate">{byId.get(id)?.name ?? tt("Topic")}</span>
+            <button type="button" aria-label={tt("Remove topic")} onClick={(e) => { e.stopPropagation(); onChange(value.filter((x) => x !== id)) }}><X size={11} /></button>
           </span>
         ))}
         {!(single && value.length) && (
-          <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true) }} onFocus={() => setOpen(true)} placeholder={value.length ? '' : placeholder} aria-label="Search topics" className="min-w-24 flex-1 bg-transparent px-1 py-0.5 text-sm outline-none placeholder:text-faint" />
+          <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true) }} onFocus={() => setOpen(true)} placeholder={value.length ? '' : placeholder} aria-label={tt("Search topics")} className="min-w-24 flex-1 bg-transparent px-1 py-0.5 text-sm outline-none placeholder:text-faint" />
         )}
       </div>
       {open && (
         <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-line bg-surface py-1 shadow-lg" role="listbox">
-          {options.length === 0 && <div className="px-3 py-2 text-sm text-muted">{data.length ? 'No matching topics' : 'No topics yet — create one in the Library'}</div>}
+          {options.length === 0 && <div className="px-3 py-2 text-sm text-muted">{data.length ? tt("No matching topics") : tt("No topics yet — create one in the Library")}</div>}
           {options.map((t) => (
-            <button key={t.id} type="button" role="option" aria-selected={false} className="block w-full px-3 py-1.5 text-left text-sm hover:bg-raised" onClick={() => { onChange(single ? [t.id] : [...value, t.id]); setQ(''); setOpen(!single) }}>
+            <button key={t.id} type="button" role="option" aria-selected={false} className="block w-full px-3 py-1.5 text-start text-sm hover:bg-raised" onClick={() => { onChange(single ? [t.id] : [...value, t.id]); setQ(''); setOpen(!single) }}>
               <span>{t.path}</span> <span className="text-xs text-faint">· {t.subject_name}</span>
             </button>
           ))}

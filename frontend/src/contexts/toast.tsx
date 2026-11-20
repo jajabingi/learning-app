@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
 import { CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { tt } from '@/i18n'
 
 interface T { id: number; kind: 'ok' | 'err'; msg: string }
 const Ctx = createContext<{ ok(m: string): void; err(m: string): void }>({ ok() {}, err() {} })
@@ -20,7 +21,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div key={t.id} className="pointer-events-auto flex items-start gap-2 rounded-lg border border-line bg-surface px-3 py-2.5 text-sm shadow-lg">
             {t.kind === 'ok' ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-good" /> : <AlertCircle size={16} className="mt-0.5 shrink-0 text-bad" />}
             <span className="flex-1">{t.msg}</span>
-            <button aria-label="Dismiss" className="text-faint hover:text-fg" onClick={() => setItems((x) => x.filter((i) => i.id !== t.id))}>
+            <button aria-label={tt("Dismiss")} className="text-faint hover:text-fg" onClick={() => setItems((x) => x.filter((i) => i.id !== t.id))}>
               <X size={14} />
             </button>
           </div>

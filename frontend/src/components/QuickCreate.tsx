@@ -10,6 +10,7 @@ import { AiGenerateDialog } from './AiGenerate'
 import { QuestionForm } from './QuestionForm'
 import { TopicPicker } from './TopicPicker'
 import { Button, Field, Menu, Modal } from './ui'
+import { tt } from '@/i18n'
 
 type Kind = 'question' | 'topic' | 'subject' | 'ai'
 interface Opts {
@@ -33,20 +34,20 @@ export function QuickCreateProvider({ children }: { children: ReactNode }) {
       qc.invalidateQueries({ queryKey: ['notes'] })
       nav(`/notes/${n.id}`)
     } catch (e) {
-      toast.err(e instanceof Error ? e.message : 'Could not create note')
+      toast.err(e instanceof Error ? e.message : tt("Could not create note"))
     }
   }
 
   return (
     <Ctx.Provider value={{ open: (kind, opts = {}) => setState({ kind, opts }), newNote }}>
       {children}
-      <Modal open={state?.kind === 'question'} onClose={close} title="New question" wide>
+      <Modal open={state?.kind === 'question'} onClose={close} title={tt("New question")} wide>
         {state?.kind === 'question' && <QuestionForm defaults={state.opts.question} onSaved={close} onCancel={close} />}
       </Modal>
-      <Modal open={state?.kind === 'topic'} onClose={close} title="New topic">
+      <Modal open={state?.kind === 'topic'} onClose={close} title={tt("New topic")}>
         {state?.kind === 'topic' && <TopicForm defaults={state.opts.topic} onDone={(id) => { close(); nav(`/library/topic/${id}`) }} onCancel={close} />}
       </Modal>
-      <Modal open={state?.kind === 'subject'} onClose={close} title="New subject">
+      <Modal open={state?.kind === 'subject'} onClose={close} title={tt("New subject")}>
         {state?.kind === 'subject' && <SubjectForm onDone={(s) => { close(); nav(`/library/subject/${s.id}`) }} onCancel={close} />}
       </Modal>
       {state?.kind === 'ai' && <AiGenerateDialog onClose={close} initial={state.opts.ai} />}
@@ -58,15 +59,15 @@ export function QuickCreateMenu() {
   const qc = useQuickCreate()
   return (
     <Menu
-      label="Quick create"
-      icon={<span className="flex items-center gap-1 px-2.5 text-sm font-medium"><Plus size={15} /> <span className="hidden sm:inline">New</span></span>}
+      label={tt("Quick create")}
+      icon={<span className="flex items-center gap-1 px-2.5 text-sm font-medium"><Plus size={15} /> <span className="hidden sm:inline">{tt("New")}</span></span>}
       items={[
-        { label: 'Question', onClick: () => qc.open('question') },
-        { label: 'Note', onClick: () => qc.newNote() },
-        { label: 'Topic', onClick: () => qc.open('topic') },
-        { label: 'Subject', onClick: () => qc.open('subject') },
+        { label: tt("Question"), onClick: () => qc.open('question') },
+        { label: tt("Note"), onClick: () => qc.newNote() },
+        { label: tt("Topic"), onClick: () => qc.open('topic') },
+        { label: tt("Subject"), onClick: () => qc.open('subject') },
         'sep',
-        { label: 'Generate questions with AI', onClick: () => qc.open('ai') },
+        { label: tt("Generate questions with AI"), onClick: () => qc.open('ai') },
       ]}
     />
   )
@@ -84,22 +85,22 @@ export function SubjectForm({ onDone, onCancel, initial }: { onDone(s: { id: str
   const [color, setColor] = useState(initial?.color ?? SUBJECT_COLORS[0])
   const m = useMutation({
     mutationFn: () => (initial?.id ? import('@/api/client').then((c) => c.patch<{ id: string }>(`/subjects/${initial.id}`, { name, description, color })) : post<{ id: string }>('/subjects', { name, description, color })),
-    onSuccess: (s) => { qc.invalidateQueries(); toast.ok(initial?.id ? 'Subject updated' : 'Subject created'); onDone(s) },
-    onError: (e) => toast.err(e instanceof Error ? e.message : 'Failed'),
+    onSuccess: (s) => { qc.invalidateQueries(); toast.ok(initial?.id ? tt("Subject updated") : tt("Subject created")); onDone(s) },
+    onError: (e) => toast.err(e instanceof Error ? e.message : tt("Failed")),
   })
   return (
     <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (name.trim()) m.mutate() }}>
-      <Field label="Name"><input className="field" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} required autoFocus placeholder="e.g. Finance & investing" /></Field>
-      <Field label="Description"><textarea className="field" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={5000} /></Field>
+      <Field label={tt("Name")}><input className="field" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} required autoFocus placeholder={tt("e.g. Finance & investing")} /></Field>
+      <Field label={tt("Description")}><textarea className="field" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={5000} /></Field>
       <div>
-        <span className="label">Color</span>
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Color">
+        <span className="label">{tt("Color")}</span>
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={tt("Color")}>
           {SUBJECT_COLORS.map((c) => (
             <button type="button" key={c} role="radio" aria-checked={color === c} aria-label={c} onClick={() => setColor(c)} className="h-6 w-6 rounded-full border-2" style={{ background: c, borderColor: color === c ? 'rgb(var(--fg))' : 'transparent' }} />
           ))}
         </div>
       </div>
-      <div className="flex justify-end gap-2"><button type="button" className="btn" onClick={onCancel}>Cancel</button><Button type="submit" className="btn-primary" loading={m.isPending}>{initial?.id ? 'Save' : 'Create subject'}</Button></div>
+      <div className="flex justify-end gap-2"><button type="button" className="btn" onClick={onCancel}>{tt("Cancel")}</button><Button type="submit" className="btn-primary" loading={m.isPending}>{initial?.id ? tt("Save") : tt("Create subject")}</Button></div>
     </form>
   )
 }
@@ -116,36 +117,36 @@ export function TopicForm({ defaults, onDone, onCancel }: { defaults?: Opts['top
   const chapters = subject?.courses.flatMap((c) => c.chapters.map((ch) => ({ id: ch.id, label: `${c.name} › ${ch.name}` }))) ?? []
   const m = useMutation({
     mutationFn: () => post<{ id: string }>('/topics', { name, subject_id: subjectId || undefined, parent_id: parent[0] ?? null, chapter_id: !parent[0] && chapterId ? chapterId : null }),
-    onSuccess: (t) => { qc.invalidateQueries(); toast.ok('Topic created'); onDone(t.id) },
-    onError: (e) => toast.err(e instanceof Error ? e.message : 'Failed'),
+    onSuccess: (t) => { qc.invalidateQueries(); toast.ok(tt("Topic created")); onDone(t.id) },
+    onError: (e) => toast.err(e instanceof Error ? e.message : tt("Failed")),
   })
   const parentSet = parent.length > 0
   return (
     <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (name.trim() && (subjectId || parentSet)) m.mutate() }}>
-      <Field label="Name"><input className="field" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} required autoFocus /></Field>
+      <Field label={tt("Name")}><input className="field" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} required autoFocus /></Field>
       <div>
-        <span className="label">Parent topic (makes this a subtopic)</span>
-        <TopicPicker single value={parent} onChange={setParent} subjectId={subjectId || null} placeholder="None — top-level topic" />
+        <span className="label">{tt("Parent topic (makes this a subtopic)")}</span>
+        <TopicPicker single value={parent} onChange={setParent} subjectId={subjectId || null} placeholder={tt("None — top-level topic")} />
       </div>
       {!parentSet && (
         <>
-          <Field label="Subject">
+          <Field label={tt("Subject")}>
             <select className="field" value={subjectId} onChange={(e) => { setSubjectId(e.target.value); setChapterId('') }} required>
-              <option value="">Choose a subject…</option>
+              <option value="">{tt("Choose a subject…")}</option>
               {tree.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </Field>
           {chapters.length > 0 && (
-            <Field label="Chapter (optional)">
+            <Field label={tt("Chapter (optional)")}>
               <select className="field" value={chapterId} onChange={(e) => setChapterId(e.target.value)}>
-                <option value="">— directly under the subject —</option>
+                <option value="">{tt("— directly under the subject —")}</option>
                 {chapters.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
             </Field>
           )}
         </>
       )}
-      <div className="flex justify-end gap-2"><button type="button" className="btn" onClick={onCancel}>Cancel</button><Button type="submit" className="btn-primary" loading={m.isPending}>Create topic</Button></div>
+      <div className="flex justify-end gap-2"><button type="button" className="btn" onClick={onCancel}>{tt("Cancel")}</button><Button type="submit" className="btn-primary" loading={m.isPending}>{tt("Create topic")}</Button></div>
     </form>
   )
 }

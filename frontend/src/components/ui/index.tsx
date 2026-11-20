@@ -3,11 +3,13 @@ import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import { CheckCircle2, Circle, CircleDashed, Loader2, PauseCircle, RefreshCw, X, MoreHorizontal } from 'lucide-react'
 import type { Status } from '@/api/types'
+import { tt } from '@/i18n'
+
 
 export const cx = clsx
 
 export function Spinner({ className }: { className?: string }) {
-  return <Loader2 className={cx('animate-spin text-faint', className)} size={18} aria-label="Loading" />
+  return <Loader2 className={cx('animate-spin text-faint', className)} size={18} aria-label={tt("Loading")} />
 }
 
 export function Loading({ label = 'Loading…' }: { label?: string }) {
@@ -21,11 +23,11 @@ export function Loading({ label = 'Loading…' }: { label?: string }) {
 export function ErrorState({ error, retry }: { error: unknown; retry?: () => void }) {
   return (
     <div className="card mx-auto my-10 max-w-md p-6 text-center">
-      <p className="text-sm font-medium text-bad">Something went wrong</p>
-      <p className="mt-1 text-sm text-muted">{error instanceof Error ? error.message : 'Unexpected error'}</p>
+      <p className="text-sm font-medium text-bad">{tt("Something went wrong")}</p>
+      <p className="mt-1 text-sm text-muted">{error instanceof Error ? error.message : tt("Unexpected error")}</p>
       {retry && (
         <button className="btn mt-4" onClick={retry}>
-          Try again
+          {tt("Try again")}
         </button>
       )}
     </div>
@@ -56,11 +58,11 @@ export function PageHeader({ title, subtitle, actions }: { title: ReactNode; sub
 }
 
 const STATUS_META: Record<Status, { label: string; cls: string; Icon: typeof Circle }> = {
-  new: { label: 'New', cls: 'text-muted bg-raised', Icon: Circle },
-  learning: { label: 'Learning', cls: 'text-warn bg-warn/10', Icon: CircleDashed },
-  reviewing: { label: 'Reviewing', cls: 'text-accent bg-accent/10', Icon: RefreshCw },
-  mastered: { label: 'Mastered', cls: 'text-good bg-good/10', Icon: CheckCircle2 },
-  suspended: { label: 'Suspended', cls: 'text-faint bg-raised line-through', Icon: PauseCircle },
+  new: { label: tt("New"), cls: 'text-muted bg-raised', Icon: Circle },
+  learning: { label: tt("Learning"), cls: 'text-warn bg-warn/10', Icon: CircleDashed },
+  reviewing: { label: tt("Reviewing"), cls: 'text-accent bg-accent/10', Icon: RefreshCw },
+  mastered: { label: tt("Mastered"), cls: 'text-good bg-good/10', Icon: CheckCircle2 },
+  suspended: { label: tt("Suspended"), cls: 'text-faint bg-raised line-through', Icon: PauseCircle },
 }
 export const statusLabel = (s: Status) => STATUS_META[s].label
 
@@ -132,7 +134,7 @@ export function Modal({ open, onClose, title, children, wide, footer, dir }: { o
       <div ref={ref} dir={dir} role="dialog" aria-modal="true" aria-labelledby={id} className={cx('flex max-h-[92vh] w-full flex-col rounded-t-xl border border-line bg-surface shadow-xl sm:rounded-lg', wide ? 'sm:max-w-3xl' : 'sm:max-w-lg')}>
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h2 id={id} className="text-sm font-semibold">{title}</h2>
-          <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Close"><X size={16} /></button>
+          <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label={tt("Close")}><X size={16} /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-line px-4 py-3 safe-bottom">{footer}</div>}
@@ -144,13 +146,13 @@ export function Modal({ open, onClose, title, children, wide, footer, dir }: { o
 
 export function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel = 'Delete', danger = true, busy }: { open: boolean; onClose(): void; onConfirm(): void; title: string; message: ReactNode; confirmLabel?: string; danger?: boolean; busy?: boolean }) {
   return (
-    <Modal open={open} onClose={onClose} title={title} footer={<><button className="btn" onClick={onClose}>Cancel</button><button className={cx('btn', danger ? 'bg-bad text-white border-transparent hover:bg-bad hover:opacity-90' : 'btn-primary')} onClick={onConfirm} disabled={busy}>{confirmLabel}</button></>}>
+    <Modal open={open} onClose={onClose} title={title} footer={<><button className="btn" onClick={onClose}>{tt("Cancel")}</button><button className={cx('btn', danger ? 'bg-bad text-white border-transparent hover:bg-bad hover:opacity-90' : 'btn-primary')} onClick={onConfirm} disabled={busy}>{confirmLabel}</button></>}>
       <div className="text-sm text-muted">{message}</div>
     </Modal>
   )
 }
 
-export function Menu({ items, label = 'More actions', icon }: { items: ({ label: string; onClick(): void; danger?: boolean; disabled?: boolean } | 'sep')[]; label?: string; icon?: ReactNode }) {
+export function Menu({ items, label = tt('More actions'), icon }: { items: ({ label: string; onClick(): void; danger?: boolean; disabled?: boolean } | 'sep')[]; label?: string; icon?: ReactNode }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -170,12 +172,12 @@ export function Menu({ items, label = 'More actions', icon }: { items: ({ label:
         {icon ?? <MoreHorizontal size={16} />}
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 z-30 mt-1 min-w-44 rounded-lg border border-line bg-surface py-1 shadow-lg">
+        <div role="menu" className="absolute end-0 z-30 mt-1 min-w-44 rounded-lg border border-line bg-surface py-1 shadow-lg">
           {items.map((it, i) =>
             it === 'sep' ? (
               <div key={i} className="my-1 border-t border-line" />
             ) : (
-              <button key={i} role="menuitem" disabled={it.disabled} className={cx('block w-full px-3 py-1.5 text-left text-sm hover:bg-raised disabled:opacity-50', it.danger && 'text-bad')} onClick={() => { setOpen(false); it.onClick() }}>
+              <button key={i} role="menuitem" disabled={it.disabled} className={cx('block w-full px-3 py-1.5 text-start text-sm hover:bg-raised disabled:opacity-50', it.danger && 'text-bad')} onClick={() => { setOpen(false); it.onClick() }}>
                 {it.label}
               </button>
             ),
@@ -253,7 +255,7 @@ export function TagInput({ value, onChange, suggestions = [] }: { value: string[
       {value.map((t) => (
         <span key={t} className="inline-flex items-center gap-1 rounded bg-raised px-1.5 py-0.5 text-xs">
           #{t}
-          <button type="button" aria-label={`Remove tag ${t}`} className="text-faint hover:text-fg" onClick={() => onChange(value.filter((x) => x !== t))}><X size={11} /></button>
+          <button type="button" aria-label={tt("Remove tag {t}", { t: t })} className="text-faint hover:text-fg" onClick={() => onChange(value.filter((x) => x !== t))}><X size={11} /></button>
         </span>
       ))}
       <input
@@ -265,9 +267,9 @@ export function TagInput({ value, onChange, suggestions = [] }: { value: string[
           else if (e.key === 'Backspace' && !text && value.length) onChange(value.slice(0, -1))
         }}
         onBlur={() => add(text)}
-        placeholder={value.length ? '' : 'Add tags…'}
+        placeholder={value.length ? '' : tt("Add tags…")}
         className="min-w-24 flex-1 bg-transparent px-1 py-0.5 text-sm outline-none placeholder:text-faint"
-        aria-label="Add tag"
+        aria-label={tt("Add tag")}
       />
       <datalist id={listId}>{suggestions.map((s) => <option key={s} value={s} />)}</datalist>
     </div>

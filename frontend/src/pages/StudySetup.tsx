@@ -11,22 +11,23 @@ import { Page } from '@/components/Layout'
 import { useAiStatus, useTree } from '@/hooks/queries'
 import { duration, relTime } from '@/lib/format'
 import { useToast } from '@/contexts/toast'
+import { tt, tl } from '@/i18n'
 
 const MODES = [
-  { id: 'quick_recall', label: 'Quick Recall', desc: 'See the question, reveal the answer, rate yourself.', Icon: Zap },
-  { id: 'written_recall', label: 'Written Recall', desc: 'Write a full answer first, then compare with the solution.', Icon: PenLine },
-  { id: 'multiple_choice', label: 'Multiple Choice', desc: 'Choose from options; wrong answers are scheduled for relearning.', Icon: CheckSquare },
-  { id: 'calculation', label: 'Calculation', desc: 'Work the problem, then compare your calculation.', Icon: Calculator },
-  { id: 'topic', label: 'Topic Study', desc: 'Only questions from one topic (and its subtopics).', Icon: Layers },
-  { id: 'subject', label: 'Subject Study', desc: 'Questions from an entire subject.', Icon: Library },
-  { id: 'mixed', label: 'Mixed Study', desc: 'Interleave questions from all your subjects.', Icon: Shuffle },
-  { id: 'weakness', label: 'Weakness Mode', desc: 'Focus on questions you keep getting wrong.', Icon: Target },
+  { id: 'quick_recall', label: tt("Quick Recall"), desc: tt("See the question, reveal the answer, rate yourself."), Icon: Zap },
+  { id: 'written_recall', label: tt("Written Recall"), desc: tt("Write a full answer first, then compare with the solution."), Icon: PenLine },
+  { id: 'multiple_choice', label: tt("Multiple Choice"), desc: tt("Choose from options; wrong answers are scheduled for relearning."), Icon: CheckSquare },
+  { id: 'calculation', label: tt("Calculation"), desc: tt("Work the problem, then compare your calculation."), Icon: Calculator },
+  { id: 'topic', label: tt("Topic Study"), desc: tt("Only questions from one topic (and its subtopics)."), Icon: Layers },
+  { id: 'subject', label: tt("Subject Study"), desc: tt("Questions from an entire subject."), Icon: Library },
+  { id: 'mixed', label: tt("Mixed Study"), desc: tt("Interleave questions from all your subjects."), Icon: Shuffle },
+  { id: 'weakness', label: tt("Weakness Mode"), desc: tt("Focus on questions you keep getting wrong."), Icon: Target },
 ] as const
 type ModeId = (typeof MODES)[number]['id']
 
 const SELECTIONS = [
-  ['mixed', 'Smart mix — due reviews first, then new'], ['due', 'Review questions only (due now)'], ['new', 'New questions only'],
-  ['weak', 'Weak questions only'], ['all', 'Everything, ignoring schedule'],
+  ['mixed', tt("Smart mix — due reviews first, then new")], ['due', tt("Review questions only (due now)")], ['new', tt("New questions only")],
+  ['weak', tt("Weak questions only")], ['all', tt("Everything, ignoring schedule")],
 ]
 
 export default function StudySetup() {
@@ -52,30 +53,30 @@ export default function StudySetup() {
   const start = useMutation({
     mutationFn: () => post<{ id: string }>('/study/sessions', body),
     onSuccess: (s) => nav(`/study/session/${s.id}${written ? '?style=written' : ''}`),
-    onError: (e) => toast.err(e instanceof Error ? e.message : 'Could not start'),
+    onError: (e) => toast.err(e instanceof Error ? e.message : tt("Could not start")),
   })
   const avail = preview.data?.available ?? 0
 
   return (
     <Page>
-      <PageHeader title="Study" subtitle="Active recall beats re-reading. Pick a mode and test yourself." />
+      <PageHeader title={tt("Study")} subtitle={tt("Active recall beats re-reading. Pick a mode and test yourself.")} />
       {open.data && open.data.length > 0 && (
         <section className="card mb-5 p-4">
-          <h2 className="h-section mb-2">Resume a session</h2>
+          <h2 className="h-section mb-2">{tt("Resume a session")}</h2>
           <ul className="divide-y divide-line">
             {open.data.map((s) => (
               <li key={s.id} className="flex items-center gap-3 py-2">
-                <div className="min-w-0 flex-1 text-sm"><span className="font-medium capitalize">{s.mode.replace('_', ' ')}</span> <Badge>{s.status}</Badge><div className="text-xs text-muted">{s.answered} of {s.total} answered · {relTime(s.last_activity_at)}</div></div>
-                <Link className="btn btn-primary" to={`/study/session/${s.id}`}>Resume</Link>
+                <div className="min-w-0 flex-1 text-sm"><span className="font-medium capitalize">{tl(s.mode.replace('_', ' '))}</span> <Badge>{tl(s.status)}</Badge><div className="text-xs text-muted">{s.answered} {tt("of")} {s.total} {tt("answered ·")} {relTime(s.last_activity_at)}</div></div>
+                <Link className="btn btn-primary" to={`/study/session/${s.id}`}>{tt("Resume")}</Link>
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="radiogroup" aria-label="Study mode">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="radiogroup" aria-label={tt("Study mode")}>
         {MODES.map((m) => (
-          <button key={m.id} role="radio" aria-checked={mode === m.id} onClick={() => setMode(m.id)} className={cx('card p-3.5 text-left hover:border-faint', mode === m.id && 'border-accent ring-1 ring-accent')}>
+          <button key={m.id} role="radio" aria-checked={mode === m.id} onClick={() => setMode(m.id)} className={cx('card p-3.5 text-start hover:border-faint', mode === m.id && 'border-accent ring-1 ring-accent')}>
             <m.Icon size={18} className={mode === m.id ? 'text-accent' : 'text-muted'} />
             <div className="mt-2 text-sm font-medium">{m.label}</div>
             <p className="mt-0.5 text-xs text-muted">{m.desc}</p>
@@ -84,25 +85,25 @@ export default function StudySetup() {
       </div>
 
       <section className="card mt-5 p-4">
-        <h2 className="h-section mb-3">Session settings</h2>
+        <h2 className="h-section mb-3">{tt("Session settings")}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Number of questions"><input type="number" min={1} max={200} className="field" value={count} onChange={(e) => setCount(Math.max(1, Math.min(200, Number(e.target.value) || 1)))} /></Field>
+          <Field label={tt("Number of questions")}><input type="number" min={1} max={200} className="field" value={count} onChange={(e) => setCount(Math.max(1, Math.min(200, Number(e.target.value) || 1)))} /></Field>
           {mode === 'topic' ? (
-            <div className="sm:col-span-2"><span className="label">Topic</span><TopicPicker single value={topic} onChange={setTopic} /></div>
+            <div className="sm:col-span-2"><span className="label">{tt("Topic")}</span><TopicPicker single value={topic} onChange={setTopic} /></div>
           ) : (
-            <Field label={mode === 'subject' ? 'Subject (required)' : 'Subject'}><select className="field" value={subject} onChange={(e) => setSubject(e.target.value)}><option value="">{mode === 'subject' ? 'Choose…' : 'All subjects'}</option>{tree.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>
+            <Field label={mode === 'subject' ? tt("Subject (required)") : tt("Subject")}><select className="field" value={subject} onChange={(e) => setSubject(e.target.value)}><option value="">{mode === 'subject' ? tt("Choose…") : tt("All subjects")}</option>{tree.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>
           )}
-          <Field label="Difficulty"><select className="field" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}><option value="">Any</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></Field>
-          {!['multiple_choice', 'calculation'].includes(mode) && <Field label="Question type"><select className="field" value={qtype} onChange={(e) => setQtype(e.target.value)}><option value="">Any</option>{QUESTION_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></Field>}
-          <Field label="Which questions"><select className="field" value={selection} onChange={(e) => setSelection(e.target.value)}>{SELECTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></Field>
+          <Field label={tt("Difficulty")}><select className="field" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}><option value="">{tt("Any")}</option><option value="easy">{tt("Easy")}</option><option value="medium">{tt("Medium")}</option><option value="hard">{tt("Hard")}</option></select></Field>
+          {!['multiple_choice', 'calculation'].includes(mode) && <Field label={tt("Question type")}><select className="field" value={qtype} onChange={(e) => setQtype(e.target.value)}><option value="">{tt("Any")}</option>{QUESTION_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></Field>}
+          <Field label={tt("Which questions")}><select className="field" value={selection} onChange={(e) => setSelection(e.target.value)}>{SELECTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></Field>
           {['topic', 'subject', 'mixed', 'weakness'].includes(mode) && (
-            <label className="flex items-end gap-2 pb-2 text-sm"><input type="checkbox" checked={written} onChange={(e) => setWritten(e.target.checked)} /> Write my answers before revealing</label>
+            <label className="flex items-end gap-2 pb-2 text-sm"><input type="checkbox" checked={written} onChange={(e) => setWritten(e.target.checked)} /> {tt("Write my answers before revealing")}</label>
           )}
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <Button className="btn-primary btn-lg" loading={start.isPending} disabled={needsScope || avail === 0} onClick={() => start.mutate()}>Start session</Button>
+          <Button className="btn-primary btn-lg" loading={start.isPending} disabled={needsScope || avail === 0} onClick={() => start.mutate()}>{tt("Start session")}</Button>
           <span className="text-sm text-muted" aria-live="polite">
-            {needsScope ? 'Choose a ' + (mode === 'topic' ? 'topic' : 'subject') + ' to continue' : preview.isLoading ? 'Checking…' : avail === 0 ? 'No questions match these settings' : `${Math.min(avail, count)} question${Math.min(avail, count) === 1 ? '' : 's'} · about ${duration((preview.data!.estimated_seconds * Math.min(avail, count)) / Math.max(avail, 1))}`}
+            {needsScope ? 'Choose a ' + (mode === 'topic' ? 'topic' : 'subject') + ' to continue' : preview.isLoading ? tt("Checking…") : avail === 0 ? tt("No questions match these settings") : `${Math.min(avail, count)} question${Math.min(avail, count) === 1 ? '' : 's'} · about ${duration((preview.data!.estimated_seconds * Math.min(avail, count)) / Math.max(avail, 1))}`}
           </span>
         </div>
       </section>
@@ -118,20 +119,20 @@ function StudyPlan() {
   const [days, setDays] = useState(7)
   const [plan, setPlan] = useState('')
   const toast = useToast()
-  const gen = useMutation({ mutationFn: () => post<{ plan: string }>('/ai/study-plan', { goal, minutes_per_day: minutes, days }), onSuccess: (r) => setPlan(r.plan), onError: (e) => toast.err(e instanceof Error ? e.message : 'Failed') })
+  const gen = useMutation({ mutationFn: () => post<{ plan: string }>('/ai/study-plan', { goal, minutes_per_day: minutes, days }), onSuccess: (r) => setPlan(r.plan), onError: (e) => toast.err(e instanceof Error ? e.message : tt("Failed")) })
   if (ai.isLoading) return <Loading />
   return (
     <section className="card mt-5 p-4">
-      <h2 className="h-section mb-1 flex items-center gap-1.5"><Brain size={14} /> AI study plan</h2>
-      {!ai.data?.enabled ? <p className="text-sm text-muted">Available once an AI key is configured on the server.</p> : (
+      <h2 className="h-section mb-1 flex items-center gap-1.5"><Brain size={14} /> {tt("AI study plan")}</h2>
+      {!ai.data?.enabled ? <p className="text-sm text-muted">{tt("Available once an AI key is configured on the server.")}</p> : (
         <>
-          <p className="mb-3 text-sm text-muted">Uses your goals, available time, mastery, upcoming reviews and weak areas.</p>
+          <p className="mb-3 text-sm text-muted">{tt("Uses your goals, available time, mastery, upcoming reviews and weak areas.")}</p>
           <div className="grid gap-3 sm:grid-cols-[1fr_8rem_8rem]">
-            <Field label="Goal"><input className="field" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. Pass the CFA Level 1 exam in 6 weeks" maxLength={1000} /></Field>
-            <Field label="Minutes / day"><input type="number" min={5} max={600} className="field" value={minutes} onChange={(e) => setMinutes(Number(e.target.value) || 30)} /></Field>
-            <Field label="Days"><input type="number" min={1} max={90} className="field" value={days} onChange={(e) => setDays(Number(e.target.value) || 7)} /></Field>
+            <Field label={tt("Goal")}><input className="field" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder={tt("e.g. Pass the CFA Level 1 exam in 6 weeks")} maxLength={1000} /></Field>
+            <Field label={tt("Minutes / day")}><input type="number" min={5} max={600} className="field" value={minutes} onChange={(e) => setMinutes(Number(e.target.value) || 30)} /></Field>
+            <Field label={tt("Days")}><input type="number" min={1} max={90} className="field" value={days} onChange={(e) => setDays(Number(e.target.value) || 7)} /></Field>
           </div>
-          <Button className="btn-primary mt-3" loading={gen.isPending} disabled={goal.trim().length < 3} onClick={() => gen.mutate()}>Create plan</Button>
+          <Button className="btn-primary mt-3" loading={gen.isPending} disabled={goal.trim().length < 3} onClick={() => gen.mutate()}>{tt("Create plan")}</Button>
           {plan && <div className="mt-4 rounded-lg border border-line bg-bg p-4"><Markdown>{plan}</Markdown></div>}
         </>
       )}

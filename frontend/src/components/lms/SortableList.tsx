@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { tt } from '@/i18n'
 import { ChevronDown, ChevronUp, GripVertical } from 'lucide-react'
 import { cx } from '@/components/ui'
 
@@ -20,9 +21,9 @@ export function SortableList<T extends { id: string }>({ items, onReorder, rende
           onDrop={(e) => { e.preventDefault(); if (drag) move(items.findIndex((x) => x.id === drag), i); setDrag(null); setOver(null) }}
           className={cx('flex items-start gap-1', drag === it.id && 'opacity-40', over === it.id && 'rounded ring-2 ring-accent/50')}>
           <div className="flex shrink-0 flex-col items-center pt-1.5 text-faint">
-            <button type="button" className="hover:text-fg disabled:opacity-30" aria-label="Move up" disabled={i === 0} onClick={() => move(i, i - 1)}><ChevronUp size={14} /></button>
+            <button type="button" className="hover:text-fg disabled:opacity-30" aria-label={tt("Move up")} disabled={i === 0} onClick={() => move(i, i - 1)}><ChevronUp size={14} /></button>
             <GripVertical size={14} className="cursor-grab" aria-hidden />
-            <button type="button" className="hover:text-fg disabled:opacity-30" aria-label="Move down" disabled={i === items.length - 1} onClick={() => move(i, i + 1)}><ChevronDown size={14} /></button>
+            <button type="button" className="hover:text-fg disabled:opacity-30" aria-label={tt("Move down")} disabled={i === items.length - 1} onClick={() => move(i, i + 1)}><ChevronDown size={14} /></button>
           </div>
           <div className="min-w-0 flex-1">{render(it, i)}</div>
         </li>

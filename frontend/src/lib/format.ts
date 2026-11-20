@@ -1,4 +1,4 @@
-import { t } from '@/i18n'
+import { t, tt } from '@/i18n'
 
 export const pct = (v: number | null | undefined, digits = 0) =>
   v === null || v === undefined ? '—' : `${(v * 100).toFixed(digits)}%`
@@ -44,9 +44,9 @@ export const plain = (md: string, n = 120) =>
 export const masteryTone = (m: number) => (m >= 0.7 ? 'good' : m >= 0.35 ? 'warn' : 'bad')
 
 export const REASONS: Record<string, string> = {
-  low_accuracy: 'Low accuracy',
-  low_mastery: 'Low mastery',
-  repeated_mistakes: 'Repeated mistakes',
-  forgotten: 'Forgotten answers',
-  insufficient_practice: 'Insufficient practice',
+  low_accuracy: tt('Low accuracy'),
+  low_mastery: tt('Low mastery'),
+  repeated_mistakes: tt('Repeated mistakes'),
+  forgotten: tt('Forgotten answers'),
+  insufficient_practice: tt('Insufficient practice'),
 }

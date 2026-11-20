@@ -11,13 +11,14 @@ import { useAiStatus } from '@/hooks/queries'
 import { useToast } from '@/contexts/toast'
 import { interval, pct } from '@/lib/format'
 import { QUESTION_TYPES } from '@/api/types'
+import { tt, tl } from '@/i18n'
 
 const STYLES = ['quick_recall', 'written_recall', 'multiple_choice', 'calculation']
 const RATINGS = [
-  { v: 1, label: 'Again', cls: 'border-bad/50 text-bad hover:bg-bad/10' },
-  { v: 2, label: 'Hard', cls: 'border-warn/50 text-warn hover:bg-warn/10' },
-  { v: 3, label: 'Good', cls: 'border-good/50 text-good hover:bg-good/10' },
-  { v: 4, label: 'Easy', cls: 'border-accent/50 text-accent hover:bg-accent/10' },
+  { v: 1, label: tt("Again"), cls: 'border-bad/50 text-bad hover:bg-bad/10' },
+  { v: 2, label: tt("Hard"), cls: 'border-warn/50 text-warn hover:bg-warn/10' },
+  { v: 3, label: tt("Good"), cls: 'border-good/50 text-good hover:bg-good/10' },
+  { v: 4, label: tt("Easy"), cls: 'border-accent/50 text-accent hover:bg-accent/10' },
 ]
 
 export default function StudySession() {
@@ -68,12 +69,12 @@ export default function StudySession() {
       selected_option_ids: isMcq ? picked : undefined, ai_score: evalResult?.score,
     }),
     onSuccess: async () => { await session.refetch(); qc.invalidateQueries({ queryKey: ['due-badge'] }) },
-    onError: (e) => toast.err(e instanceof Error ? e.message : 'Could not save your answer'),
+    onError: (e) => toast.err(e instanceof Error ? e.message : tt("Could not save your answer")),
   })
   const evaluate = useMutation({
     mutationFn: () => post<Evaluation>('/ai/evaluate', { question_id: q!.id, answer: text }),
     onSuccess: setEvalResult,
-    onError: (e) => toast.err(e instanceof Error ? e.message : 'Evaluation failed'),
+    onError: (e) => toast.err(e instanceof Error ? e.message : tt("Evaluation failed")),
   })
 
   const reveal = useCallback(() => { if (isMcq && !picked.length) return; setRevealed(true); if (isMcq) setChecked(true) }, [isMcq, picked.length])
@@ -109,10 +110,10 @@ export default function StudySession() {
   return (
     <div className="flex h-full flex-col bg-bg">
       <header className="flex shrink-0 items-center gap-3 border-b border-line bg-surface px-3 py-2 sm:px-5">
-        <button className="btn btn-ghost btn-icon" onClick={pause} aria-label="Pause and exit"><X size={18} /></button>
-        <div className="flex-1"><ProgressBar value={answered / total} tone="accent" label="Session progress" /></div>
+        <button className="btn btn-ghost btn-icon" onClick={pause} aria-label={tt("Pause and exit")}><X size={18} /></button>
+        <div className="flex-1"><ProgressBar value={answered / total} tone="accent" label={tt("Session progress")} /></div>
         <span className="tabnum text-sm text-muted">{answered + 1} / {total}</span>
-        <button className="btn" onClick={pause}><Pause size={14} /> <span className="hidden sm:inline">Pause</span></button>
+        <button className="btn" onClick={pause}><Pause size={14} /> <span className="hidden sm:inline">{tt("Pause")}</span></button>
       </header>
 
       <main className="flex-1 overflow-y-auto">
@@ -120,7 +121,7 @@ export default function StudySession() {
           <div className="mb-3 flex flex-wrap items-center gap-1.5">
             <StatusBadge status={q!.progress.status} />
             <Badge>{QUESTION_TYPES.find((t) => t.value === q!.question_type)?.label}</Badge>
-            <Badge className="capitalize">{q!.difficulty}</Badge>
+            <Badge className="capitalize">{tl(q!.difficulty)}</Badge>
             {q!.topics[0] && <span className="text-xs text-muted">{q!.topics[0].name}</span>}
           </div>
           <article className="card p-4 sm:p-6">
@@ -128,7 +129,7 @@ export default function StudySession() {
           </article>
 
           {isMcq && (
-            <ul className="mt-4 space-y-2" role={multi ? 'group' : 'radiogroup'} aria-label="Answer options">
+            <ul className="mt-4 space-y-2" role={multi ? 'group' : 'radiogroup'} aria-label={tt("Answer options")}>
               {q!.options.map((o) => {
                 const on = picked.includes(o.id!)
                 const showRight = checked && o.is_correct
@@ -137,7 +138,7 @@ export default function StudySession() {
                   <li key={o.id}>
                     <button disabled={checked} role={multi ? 'checkbox' : 'radio'} aria-checked={on}
                       onClick={() => setPicked(multi ? (on ? picked.filter((x) => x !== o.id) : [...picked, o.id!]) : [o.id!])}
-                      className={cx('flex min-h-12 w-full items-center gap-3 rounded-lg border px-4 py-3 text-left text-[15px]', on && !checked && 'border-accent bg-accent/5', showRight && 'border-good bg-good/10', showWrong && 'border-bad bg-bad/10', !on && !showRight && 'bg-surface hover:bg-raised')}>
+                      className={cx('flex min-h-12 w-full items-center gap-3 rounded-lg border px-4 py-3 text-start text-[15px]', on && !checked && 'border-accent bg-accent/5', showRight && 'border-good bg-good/10', showWrong && 'border-bad bg-bad/10', !on && !showRight && 'bg-surface hover:bg-raised')}>
                       <span className={cx('flex h-5 w-5 shrink-0 items-center justify-center border', multi ? 'rounded' : 'rounded-full', on ? 'border-accent bg-accent text-accent-fg' : 'border-faint')}>{on && <Check size={12} />}</span>
                       <span className="flex-1"><Markdown>{o.text}</Markdown></span>
                       {showRight && <Check size={16} className="text-good" />}{showWrong && <X size={16} className="text-bad" />}
@@ -150,28 +151,28 @@ export default function StudySession() {
 
           {writing && (
             <div className="mt-4">
-              <label className="label" htmlFor="response">{style === 'calculation' ? 'Your working and result' : 'Your answer'}</label>
+              <label className="label" htmlFor="response">{style === 'calculation' ? tt("Your working and result") : tt("Your answer")}</label>
               <textarea id="response" className={cx('field min-h-36', style === 'calculation' && 'font-mono')} value={text} onChange={(e) => setText(e.target.value)} readOnly={revealed} rows={style === 'calculation' ? 8 : 6}
-                placeholder={style === 'calculation' ? 'Show your steps…' : 'Write everything you remember before revealing the answer…'} autoFocus />
+                placeholder={style === 'calculation' ? tt("Show your steps…") : tt("Write everything you remember before revealing the answer…")} autoFocus />
             </div>
           )}
 
           {revealed && (
             <section className="mt-5 space-y-4" aria-live="polite">
               <div className={cx('grid gap-4', writing && text.trim() && 'md:grid-cols-2')}>
-                {writing && text.trim() && <div className="card p-4"><h2 className="h-section mb-1 text-muted">Your answer</h2><p className="whitespace-pre-wrap text-sm">{text}</p></div>}
+                {writing && text.trim() && <div className="card p-4"><h2 className="h-section mb-1 text-muted">{tt("Your answer")}</h2><p className="whitespace-pre-wrap text-sm">{text}</p></div>}
                 <div className="card border-good/40 p-4 sm:p-5">
-                  <h2 className="h-section mb-1 text-good">Answer</h2>
-                  {q!.answer.answer ? <Markdown>{q!.answer.answer}</Markdown> : isMcq ? <p className="text-sm text-muted">{gotRight ? 'Correct.' : 'The correct option is highlighted above.'}</p> : <p className="text-sm text-faint">No answer saved for this question.</p>}
-                  {q!.answer.explanation && <div className="mt-3 border-t border-line pt-3"><h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Explanation</h3><Markdown>{q!.answer.explanation}</Markdown></div>}
+                  <h2 className="h-section mb-1 text-good">{tt("Answer")}</h2>
+                  {q!.answer.answer ? <Markdown>{q!.answer.answer}</Markdown> : isMcq ? <p className="text-sm text-muted">{gotRight ? tt("Correct.") : tt("The correct option is highlighted above.")}</p> : <p className="text-sm text-faint">{tt("No answer saved for this question.")}</p>}
+                  {q!.answer.explanation && <div className="mt-3 border-t border-line pt-3"><h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">{tt("Explanation")}</h3><Markdown>{q!.answer.explanation}</Markdown></div>}
                 </div>
               </div>
 
-              {writing && text.trim() && ai.data?.enabled && !evalResult && <Button onClick={() => evaluate.mutate()} loading={evaluate.isPending}><Sparkles size={14} /> Evaluate my answer with AI</Button>}
+              {writing && text.trim() && ai.data?.enabled && !evalResult && <Button onClick={() => evaluate.mutate()} loading={evaluate.isPending}><Sparkles size={14} /> {tt("Evaluate my answer with AI")}</Button>}
               {evalResult && <EvalCard e={evalResult} />}
 
               <div>
-                <button className="flex items-center gap-1 text-sm text-muted hover:text-fg" onClick={() => setTutor(!tutor)} aria-expanded={tutor}>{tutor ? <ChevronUp size={14} /> : <ChevronDown size={14} />} Ask the AI tutor about this question</button>
+                <button className="flex items-center gap-1 text-sm text-muted hover:text-fg" onClick={() => setTutor(!tutor)} aria-expanded={tutor}>{tutor ? <ChevronUp size={14} /> : <ChevronDown size={14} />} {tt("Ask the AI tutor about this question")}</button>
                 {tutor && <div className="card mt-2 p-4"><Tutor questionId={q!.id} userAnswer={text} /></div>}
               </div>
             </section>
@@ -183,14 +184,14 @@ export default function StudySession() {
         <div className="mx-auto max-w-2xl">
           {!revealed ? (
             <Button className="btn-primary btn-lg w-full" disabled={isMcq && !picked.length} onClick={reveal}>
-              {isMcq ? 'Check answer' : 'Show answer'} <kbd className="ml-2 hidden rounded border border-white/30 px-1 text-xs opacity-80 sm:inline">Space</kbd>
+              {isMcq ? tt("Check answer") : tt("Show answer")} <kbd className="ml-2 hidden rounded border border-white/30 px-1 text-xs opacity-80 sm:inline">Space</kbd>
             </Button>
           ) : isMcq && !gotRight ? (
-            <Button className="btn-lg w-full" loading={answer.isPending} onClick={() => rate(1)}>Continue — this one will come back <kbd className="ml-2 hidden rounded border border-line px-1 text-xs text-muted sm:inline">Enter</kbd></Button>
+            <Button className="btn-lg w-full" loading={answer.isPending} onClick={() => rate(1)}>{tt("Continue — this one will come back")} <kbd className="ml-2 hidden rounded border border-line px-1 text-xs text-muted sm:inline">Enter</kbd></Button>
           ) : (
-            <div className={cx('grid gap-2', isMcq ? 'grid-cols-3' : 'grid-cols-4')} role="group" aria-label="How well did you recall it?">
+            <div className={cx('grid gap-2', isMcq ? 'grid-cols-3' : 'grid-cols-4')} role="group" aria-label={tt("How well did you recall it?")}>
               {RATINGS.filter((r) => !(isMcq && r.v === 1)).map((r) => (
-                <button key={r.v} disabled={answer.isPending} onClick={() => rate(r.v)} aria-label={`${r.label}, next review in ${interval(item.intervals[r.v])}`}
+                <button key={r.v} disabled={answer.isPending} onClick={() => rate(r.v)} aria-label={tt("{label}, next review in {v}", { label: r.label, v: interval(item.intervals[r.v]) })}
                   className={cx('flex min-h-14 flex-col items-center justify-center rounded-lg border bg-surface px-1 py-2 font-medium disabled:opacity-50', r.cls, evalResult?.suggested_rating === r.v && 'ring-2 ring-accent')}>
                   <span className="text-sm">{r.label}</span>
                   <span className="text-xs font-normal opacity-80 tabnum">{interval(item.intervals[r.v])}</span>
@@ -199,7 +200,7 @@ export default function StudySession() {
               ))}
             </div>
           )}
-          {revealed && evalResult && <p className="mt-1.5 text-center text-xs text-muted">AI suggests: {RATINGS[evalResult.suggested_rating - 1].label} — you decide.</p>}
+          {revealed && evalResult && <p className="mt-1.5 text-center text-xs text-muted">{tt("AI suggests:")} {RATINGS[evalResult.suggested_rating - 1].label} {tt("— you decide.")}</p>}
         </div>
       </footer>
     </div>
@@ -213,8 +214,8 @@ function EvalCard({ e }: { e: Evaluation }) {
   return (
     <div className="card space-y-3 p-4">
       <div className="flex items-center gap-3"><div className="tabnum text-2xl font-semibold">{Math.round(e.score)}<span className="text-sm text-muted">/100</span></div><p className="flex-1 text-sm">{e.explanation}</p></div>
-      {list('Correct concepts', e.correct_concepts, 'text-good')}{list('Missing concepts', e.missing_concepts, 'text-warn')}{list('Incorrect reasoning', e.incorrect_reasoning, 'text-bad')}
-      {e.improved_answer && <details><summary className="cursor-pointer text-sm font-medium">Suggested improved answer</summary><div className="mt-2"><Markdown>{e.improved_answer}</Markdown></div></details>}
+      {list(tt('Correct concepts'), e.correct_concepts, 'text-good')}{list(tt('Missing concepts'), e.missing_concepts, 'text-warn')}{list(tt('Incorrect reasoning'), e.incorrect_reasoning, 'text-bad')}
+      {e.improved_answer && <details><summary className="cursor-pointer text-sm font-medium">{tt("Suggested improved answer")}</summary><div className="mt-2"><Markdown>{e.improved_answer}</Markdown></div></details>}
     </div>
   )
 }
@@ -230,19 +231,19 @@ function Summary({ id }: { id: string }) {
     <div className="flex min-h-full items-center justify-center bg-bg px-4 py-10">
       <div className="card w-full max-w-lg p-6">
         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-good/10 text-good"><Check size={20} /></div>
-        <h1 className="h-page">Session complete</h1>
-        <p className="mt-1 text-sm text-muted">{d.reviews} answers in {Math.max(1, Math.round(d.time_seconds / 60))} min. Your review schedule has been updated.</p>
+        <h1 className="h-page">{tt("Session complete")}</h1>
+        <p className="mt-1 text-sm text-muted">{d.reviews} {tt("answers in")} {Math.max(1, Math.round(d.time_seconds / 60))} {tt("min. Your review schedule has been updated.")}</p>
         <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-          <div className="rounded-lg bg-raised p-3"><div className="tabnum text-xl font-semibold">{pct(d.accuracy)}</div><div className="text-xs text-muted">Recalled</div></div>
-          <div className="rounded-lg bg-raised p-3"><div className="tabnum text-xl font-semibold">{d.ratings['1'] ?? 0}</div><div className="text-xs text-muted">Again</div></div>
-          <div className="rounded-lg bg-raised p-3"><div className="tabnum text-xl font-semibold">{(d.ratings['3'] ?? 0) + (d.ratings['4'] ?? 0)}</div><div className="text-xs text-muted">Good / Easy</div></div>
+          <div className="rounded-lg bg-raised p-3"><div className="tabnum text-xl font-semibold">{pct(d.accuracy)}</div><div className="text-xs text-muted">{tt("Recalled")}</div></div>
+          <div className="rounded-lg bg-raised p-3"><div className="tabnum text-xl font-semibold">{d.ratings['1'] ?? 0}</div><div className="text-xs text-muted">{tt("Again")}</div></div>
+          <div className="rounded-lg bg-raised p-3"><div className="tabnum text-xl font-semibold">{(d.ratings['3'] ?? 0) + (d.ratings['4'] ?? 0)}</div><div className="text-xs text-muted">{tt("Good / Easy")}</div></div>
         </div>
         {d.missed.length > 0 && (
-          <div className="mt-5"><h2 className="h-section mb-1">To revisit</h2>
-            <ul className="space-y-0.5 text-sm">{[...new Map(d.missed.map((m) => [m.question_id, m])).values()].slice(0, 8).map((m) => <li key={m.question_id}><Link className="text-accent underline" to={`/questions/${m.question_id}`}>{m.title || 'Untitled question'}</Link></li>)}</ul>
+          <div className="mt-5"><h2 className="h-section mb-1">{tt("To revisit")}</h2>
+            <ul className="space-y-0.5 text-sm">{[...new Map(d.missed.map((m) => [m.question_id, m])).values()].slice(0, 8).map((m) => <li key={m.question_id}><Link className="text-accent underline" to={`/questions/${m.question_id}`}>{m.title || tt("Untitled question")}</Link></li>)}</ul>
           </div>
         )}
-        <div className="mt-6 flex flex-wrap gap-2"><Link className="btn btn-primary" to="/study">Study more</Link><Link className="btn" to="/">Dashboard</Link><Link className="btn" to="/review">Review queue</Link></div>
+        <div className="mt-6 flex flex-wrap gap-2"><Link className="btn btn-primary" to="/study">{tt("Study more")}</Link><Link className="btn" to="/">{tt("Dashboard")}</Link><Link className="btn" to="/review">{tt("Review queue")}</Link></div>
       </div>
     </div>
   )

@@ -90,3 +90,10 @@ button, a, input, select, textarea { transition: background-color 120ms, border-
 .student-portal { font-size: 15px; }
 .student-portal .prose-recall { font-size: 17px; line-height: 1.85; }
 .student-portal .prose-recall table { font-size: 15px; }
+
+/* Technical content stays left-to-right inside RTL pages (formulas, code, URLs). */
+.prose-recall pre, .prose-recall code, .katex, .katex-display { direction: ltr; unicode-bidi: isolate; }
+.prose-recall pre { text-align: left; }
+.katex-display { text-align: center; }
+input[type='url'], input[type='email'], input[type='password'], .ltr-island { direction: ltr; }
+input[type='url']::placeholder, input[type='email']::placeholder { text-align: start; }

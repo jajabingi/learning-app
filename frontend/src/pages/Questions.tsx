@@ -8,6 +8,7 @@ import { useQuickCreate } from '@/components/QuickCreate'
 import { Menu, PageHeader } from '@/components/ui'
 import { Page } from '@/components/Layout'
 import { useToast } from '@/contexts/toast'
+import { tt } from '@/i18n'
 
 export default function QuestionsPage() {
   const [sp] = useSearchParams()
@@ -23,27 +24,27 @@ export default function QuestionsPage() {
       const r = await api<{ created: number; error_count: number; errors: { row: number; message: string }[] }>('/import/questions', { form })
       cache.invalidateQueries()
       if (r.error_count) toast.err(`${r.created} imported, ${r.error_count} row(s) skipped — first: row ${r.errors[0].row}: ${r.errors[0].message}`)
-      else toast.ok(`${r.created} questions imported`)
+      else toast.ok(tt("{created} questions imported", { created: r.created }))
     } catch (e) {
-      toast.err(e instanceof Error ? e.message : 'Import failed')
+      toast.err(e instanceof Error ? e.message : tt("Import failed"))
     }
   }
 
   return (
     <Page>
       <PageHeader
-        title="Questions"
-        subtitle="Your question bank — create, organise and filter everything you want to remember."
+        title={tt("Questions")}
+        subtitle={tt("Your question bank — create, organise and filter everything you want to remember.")}
         actions={
           <>
             <input ref={file} type="file" accept=".csv,text/csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importCsv(f); e.target.value = '' }} />
-            <Menu label="Import and export" icon={<span className="flex items-center gap-1 px-2.5 text-sm font-medium">Import / export</span>} items={[
-              { label: 'Import questions from CSV…', onClick: () => file.current?.click() },
-              { label: 'Export questions as CSV', onClick: () => download('/export/questions.csv', 'questions.csv').catch((e) => toast.err(e.message)) },
-              { label: 'Export everything as JSON', onClick: () => download('/export/json', 'recall-export.json').catch((e) => toast.err(e.message)) },
+            <Menu label={tt("Import and export")} icon={<span className="flex items-center gap-1 px-2.5 text-sm font-medium">{tt("Import / export")}</span>} items={[
+              { label: tt("Import questions from CSV…"), onClick: () => file.current?.click() },
+              { label: tt("Export questions as CSV"), onClick: () => download('/export/questions.csv', 'questions.csv').catch((e) => toast.err(e.message)) },
+              { label: tt("Export everything as JSON"), onClick: () => download('/export/json', 'recall-export.json').catch((e) => toast.err(e.message)) },
             ]} />
-            <button className="btn" onClick={() => qc.open('ai')}><Sparkles size={14} /> Generate with AI</button>
-            <button className="btn btn-primary" onClick={() => qc.open('question')}>New question</button>
+            <button className="btn" onClick={() => qc.open('ai')}><Sparkles size={14} /> {tt("Generate with AI")}</button>
+            <button className="btn btn-primary" onClick={() => qc.open('question')}>{tt("New question")}</button>
           </>
         }
       />

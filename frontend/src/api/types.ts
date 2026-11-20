@@ -1,3 +1,4 @@
+import { tt } from '@/i18n'
 export type QuestionType =
   | 'open_ended' | 'multiple_choice' | 'true_false' | 'short_answer' | 'calculation' | 'formula'
   | 'definition' | 'conceptual' | 'case_study' | 'comparison' | 'scenario'
@@ -5,17 +6,17 @@ export type Difficulty = 'easy' | 'medium' | 'hard'
 export type Status = 'new' | 'learning' | 'reviewing' | 'mastered' | 'suspended'
 
 export const QUESTION_TYPES: { value: QuestionType; label: string }[] = [
-  { value: 'open_ended', label: 'Open-ended' },
-  { value: 'multiple_choice', label: 'Multiple choice' },
-  { value: 'true_false', label: 'True / false' },
-  { value: 'short_answer', label: 'Short answer' },
-  { value: 'calculation', label: 'Calculation' },
-  { value: 'formula', label: 'Formula' },
-  { value: 'definition', label: 'Definition' },
-  { value: 'conceptual', label: 'Conceptual' },
-  { value: 'case_study', label: 'Case study' },
-  { value: 'comparison', label: 'Comparison' },
-  { value: 'scenario', label: 'Scenario-based' },
+  { value: 'open_ended', label: tt('Open-ended') },
+  { value: 'multiple_choice', label: tt('Multiple choice') },
+  { value: 'true_false', label: tt('True / false') },
+  { value: 'short_answer', label: tt('Short answer') },
+  { value: 'calculation', label: tt('Calculation') },
+  { value: 'formula', label: tt('Formula') },
+  { value: 'definition', label: tt('Definition') },
+  { value: 'conceptual', label: tt('Conceptual') },
+  { value: 'case_study', label: tt('Case study') },
+  { value: 'comparison', label: tt('Comparison') },
+  { value: 'scenario', label: tt('Scenario-based') },
 ]
 
 export interface User {
@@ -222,12 +223,12 @@ export interface Evaluation {
 }
 
 export const RELATIONS = [
-  { value: 'related_to', label: 'Related to' },
-  { value: 'prerequisite_for', label: 'Prerequisite for' },
-  { value: 'part_of', label: 'Part of' },
-  { value: 'contrasts_with', label: 'Contrasts with' },
-  { value: 'depends_on', label: 'Depends on' },
-  { value: 'applied_in', label: 'Applied in' },
+  { value: 'related_to', label: tt('Related to') },
+  { value: 'prerequisite_for', label: tt('Prerequisite for') },
+  { value: 'part_of', label: tt('Part of') },
+  { value: 'contrasts_with', label: tt('Contrasts with') },
+  { value: 'depends_on', label: tt('Depends on') },
+  { value: 'applied_in', label: tt('Applied in') },
 ] as const
 
 // ---------- LMS ----------

@@ -8,6 +8,7 @@ import { useToast } from '@/contexts/toast'
 import { MarkdownEditor } from './MarkdownEditor'
 import { TopicPicker } from './TopicPicker'
 import { Button, Field, TagInput, cx } from './ui'
+import { tt, tl } from '@/i18n'
 
 type Opt = { text: string; is_correct: boolean }
 
@@ -45,8 +46,8 @@ export function QuestionForm({ initial, defaults, onSaved, onCancel, saveLabel }
   const save = useMutation({
     mutationFn: async () => {
       const opts = hasOptions ? effOptions.filter((o) => o.text.trim()) : []
-      if (hasOptions && !opts.some((o) => o.is_correct)) throw new Error('Mark at least one option as correct')
-      if (!title.trim() && !content.trim()) throw new Error('Add a title or the question text')
+      if (hasOptions && !opts.some((o) => o.is_correct)) throw new Error(tt("Mark at least one option as correct"))
+      if (!title.trim() && !content.trim()) throw new Error(tt("Add a title or the question text"))
       const body = {
         title, content, question_type: type, difficulty, source,
         topic_ids: topicIds, tags: tagNames,
@@ -57,104 +58,104 @@ export function QuestionForm({ initial, defaults, onSaved, onCancel, saveLabel }
     },
     onSuccess: (q) => {
       qc.invalidateQueries()
-      toast.ok(initial ? 'Question saved' : 'Question created')
+      toast.ok(initial ? tt("Question saved") : tt("Question created"))
       onSaved?.(q)
     },
-    onError: (e) => setError(e instanceof Error ? e.message : 'Could not save'),
+    onError: (e) => setError(e instanceof Error ? e.message : tt("Could not save")),
   })
 
   return (
     <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setError(''); save.mutate() }}>
-      <Field label="Title (optional)">
-        <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={300} placeholder="Short label, e.g. “Definition of variance”" autoFocus={!initial} />
+      <Field label={tt("Title (optional)")}>
+        <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={300} placeholder={tt("Short label, e.g. “Definition of variance”")} autoFocus={!initial} />
       </Field>
       <div>
-        <span className="label">Question</span>
-        <MarkdownEditor value={content} onChange={setContent} label="Question" minRows={5} attach={initial ? { question_id: initial.id } : undefined} />
+        <span className="label">{tt("Question")}</span>
+        <MarkdownEditor value={content} onChange={setContent} label={tt("Question")} minRows={5} attach={initial ? { question_id: initial.id } : undefined} />
       </div>
 
       {hasOptions && (
         <div>
-          <span className="label">{type === 'true_false' ? 'Correct value' : 'Answer options'}</span>
+          <span className="label">{type === 'true_false' ? tt("Correct value") : tt("Answer options")}</span>
           <div className="space-y-1.5">
             {effOptions.map((o, i) => (
               <div key={i} className="flex items-center gap-2">
-                <input type={type === 'true_false' ? 'radio' : 'checkbox'} name="correct" checked={o.is_correct} aria-label={`Option ${i + 1} is correct`}
+                <input type={type === 'true_false' ? 'radio' : 'checkbox'} name="correct" checked={o.is_correct} aria-label={tt("Option {i} is correct", { i: i + 1 })}
                   onChange={() => setOptions(effOptions.map((x, j) => (type === 'true_false' ? { ...x, is_correct: i === j } : j === i ? { ...x, is_correct: !x.is_correct } : x)))} />
                 {type === 'true_false' ? <span className="text-sm">{o.text}</span> : (
-                  <input className="field" value={o.text} placeholder={`Option ${i + 1}`} onChange={(e) => setOptions(options.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
+                  <input className="field" value={o.text} placeholder={tt("Option {i}", { i: i + 1 })} onChange={(e) => setOptions(options.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
                 )}
                 {type === 'multiple_choice' && options.length > 2 && (
-                  <button type="button" className="btn btn-ghost btn-icon" aria-label="Remove option" onClick={() => setOptions(options.filter((_, j) => j !== i))}><Trash2 size={14} /></button>
+                  <button type="button" className="btn btn-ghost btn-icon" aria-label={tt("Remove option")} onClick={() => setOptions(options.filter((_, j) => j !== i))}><Trash2 size={14} /></button>
                 )}
               </div>
             ))}
             {type === 'multiple_choice' && options.length < 10 && (
-              <button type="button" className="btn btn-ghost" onClick={() => setOptions([...options, { text: '', is_correct: false }])}><Plus size={14} /> Add option</button>
+              <button type="button" className="btn btn-ghost" onClick={() => setOptions([...options, { text: '', is_correct: false }])}><Plus size={14} /> {tt("Add option")}</button>
             )}
           </div>
         </div>
       )}
 
       <div>
-        <span className="label">{hasOptions ? 'Answer notes (optional)' : 'Answer'}</span>
-        <MarkdownEditor value={answer} onChange={setAnswer} label="Answer" minRows={4} attach={initial ? { question_id: initial.id } : undefined} />
+        <span className="label">{hasOptions ? tt("Answer notes (optional)") : tt("Answer")}</span>
+        <MarkdownEditor value={answer} onChange={setAnswer} label={tt("Answer")} minRows={4} attach={initial ? { question_id: initial.id } : undefined} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Subject">
+        <Field label={tt("Subject")}>
           <select className="field" value={subjectId} onChange={(e) => setSubjectId(e.target.value)}>
-            <option value="">— none —</option>
+            <option value="">{tt("— none —")}</option>
             {tree.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </Field>
         <div>
-          <span className="label">Topics</span>
+          <span className="label">{tt("Topics")}</span>
           <TopicPicker value={topicIds} onChange={setTopicIds} subjectId={subjectId || null} />
         </div>
       </div>
 
       <button type="button" className="flex items-center gap-1 text-sm font-medium text-muted hover:text-fg" onClick={() => setMore(!more)} aria-expanded={more}>
-        {more ? <ChevronDown size={14} /> : <ChevronRight size={14} />} More details
+        {more ? <ChevronDown size={14} /> : <ChevronRight size={14} className="rtl:rotate-180" />} {tt("More details")}
       </button>
       {more && (
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Type">
+            <Field label={tt("Type")}>
               <select className="field" value={type} onChange={(e) => changeType(e.target.value as QuestionType)}>
                 {QUESTION_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </Field>
-            <Field label="Difficulty">
+            <Field label={tt("Difficulty")}>
               <select className="field" value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}>
-                <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
+                <option value="easy">{tt("Easy")}</option><option value="medium">{tt("Medium")}</option><option value="hard">{tt("Hard")}</option>
               </select>
             </Field>
           </div>
           <div>
-            <span className="label">Explanation</span>
-            <MarkdownEditor value={explanation} onChange={setExplanation} label="Explanation" minRows={3} attach={initial ? { question_id: initial.id } : undefined} />
+            <span className="label">{tt("Explanation")}</span>
+            <MarkdownEditor value={explanation} onChange={setExplanation} label={tt("Explanation")} minRows={3} attach={initial ? { question_id: initial.id } : undefined} />
           </div>
           <div>
-            <span className="label">Tags</span>
+            <span className="label">{tt("Tags")}</span>
             <TagInput value={tagNames} onChange={setTagNames} suggestions={tags.map((t) => t.name)} />
           </div>
-          <Field label="Source or reference">
-            <input className="field" value={source} onChange={(e) => setSource(e.target.value)} maxLength={500} placeholder="Book, URL, lecture…" />
+          <Field label={tt("Source or reference")}>
+            <input className="field" value={source} onChange={(e) => setSource(e.target.value)} maxLength={500} placeholder={tt("Book, URL, lecture…")} />
           </Field>
         </div>
       )}
       {!more && (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-          Type: <button type="button" className="underline" onClick={() => setMore(true)}>{QUESTION_TYPES.find((t) => t.value === type)?.label}</button>
-          · Difficulty: <span className="capitalize">{difficulty}</span>
+          {tt("Type:")} <button type="button" className="underline" onClick={() => setMore(true)}>{QUESTION_TYPES.find((t) => t.value === type)?.label}</button>
+          {tt("· Difficulty:")} <span className="capitalize">{tl(difficulty)}</span>
         </div>
       )}
 
       {error && <p role="alert" className={cx('text-sm text-bad')}>{error}</p>}
       <div className="flex justify-end gap-2">
-        {onCancel && <button type="button" className="btn" onClick={onCancel}>Cancel</button>}
-        <Button type="submit" className="btn-primary" loading={save.isPending}>{saveLabel ?? (initial ? 'Save changes' : 'Create question')}</Button>
+        {onCancel && <button type="button" className="btn" onClick={onCancel}>{tt("Cancel")}</button>}
+        <Button type="submit" className="btn-primary" loading={save.isPending}>{saveLabel ?? (initial ? tt("Save changes") : tt("Create question"))}</Button>
       </div>
     </form>
   )
