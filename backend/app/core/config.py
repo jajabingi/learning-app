@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     ai_model: str = "claude-sonnet-5-5"
     ai_max_tokens: int = 4096
 
-    rate_limit_auth_per_min: int = 10
+    rate_limit_auth_per_min: int = 30
     rate_limit_ai_per_min: int = 20
     rate_limit_public_per_min: int = 120
     rate_limit_exam_per_min: int = 240
