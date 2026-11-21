@@ -7,6 +7,7 @@ os.environ["DATABASE_URL"] = f"sqlite:///{Path(_tmp, 'test.db').as_posix()}"
 os.environ["UPLOAD_DIR"] = str(Path(_tmp, "uploads"))
 os.environ["SECRET_KEY"] = "test-secret-key-test-secret-key-1234"
 os.environ["RATE_LIMIT_AUTH_PER_MIN"] = "0"
+os.environ["RATE_LIMIT_AI_PER_MIN"] = "0"  # the in-process limiter is shared by all tests of a run
 os.environ["ANTHROPIC_API_KEY"] = ""
 
 import pytest  # noqa: E402

@@ -7,6 +7,7 @@ import { MarkdownEditor } from '@/components/MarkdownEditor'
 import { Field } from '@/components/ui'
 import { useToast } from '@/contexts/toast'
 import { plain } from '@/lib/format'
+import { AiAssistButton } from './AiAssist'
 import { tt } from '@/i18n'
 
 
@@ -56,10 +57,11 @@ function setPath(o: any, p: string, v: any): any {
   return { ...o, [h]: rest.length ? setPath(o?.[h] ?? {}, rest.join('.'), v) : v }
 }
 
-export function BlockForm({ type, data, onChange }: { type: BlockType; data: Record<string, any>; onChange(d: Record<string, any>): void }) {
+export function BlockForm({ type, data, onChange, lessonId }: { type: BlockType; data: Record<string, any>; onChange(d: Record<string, any>): void; lessonId?: string }) {
   const meta = BLOCK_META[type]
   return (
     <div className="space-y-3">
+      {lessonId && <div className="flex justify-end"><AiAssistButton lessonId={lessonId} type={type} data={data} onApply={(d) => onChange({ ...data, ...d })} /></div>}
       {meta.fields.map((f) => {
         const v = getPath(data, f.key)
         const set = (x: any) => onChange(setPath(data, f.key, x))
