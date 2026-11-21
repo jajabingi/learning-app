@@ -227,3 +227,66 @@ def generate_module_draft(*, prompt: str, language: str, lessons: int) -> dict:
         return DraftModule.model_validate(data).model_dump()
     except ValidationError:
         raise AIError("The AI returned an incomplete module. Try again or simplify the prompt.")
+
+
+# ---------------- single-block / lesson-summary assistance (inside the lesson editor) ----------------
+ASSIST_TYPES = ("text", "rich_text", "summary", "example", "table", "formula", "callout")
+REWRITES = {
+    "shorter": "Rewrite it shorter and tighter, keeping every key point.",
+    "simpler": "Rewrite it in simpler language for a beginner, keeping it accurate.",
+    "advanced": "Rewrite it at a more advanced, rigorous level.",
+    "add_example": "Keep the text and add a fully worked example with correct arithmetic, step by step.",
+    "add_steps": "Add a clear step-by-step explanation.",
+    "translate_en": "Translate it to English.",
+    "translate_he": "Translate it to Hebrew (keep LaTeX and English finance/maths acronyms).",
+    "fix": "Fix mistakes in wording, structure and any maths, and polish it without changing the meaning.",
+}
+_SHAPE = {
+    "formula": '{"title": str, "latex": str (LaTeX WITHOUT $ delimiters), "description": str (Markdown explaining the symbols and when to use it)}',
+    "callout": '{"variant": "info"|"tip"|"warning"|"important", "markdown": str}',
+}
+_KIND_HINT = {
+    "text": "an explanatory passage", "rich_text": "a rich explanation with headings and lists", "summary": "a concise summary with bullet points",
+    "example": "a fully worked example with every step and correct arithmetic", "table": "a Markdown table (header row, separator row, data rows)",
+    "formula": "a key formula with an explanation of every symbol", "callout": "a short highlighted note (tip, warning or key point)",
+}
+
+
+def _block_context(ctx: dict) -> str:
+    return (f"Course: {ctx.get('course', '')} | Level: {ctx.get('level', '')} | Audience: {ctx.get('audience', '')}\n"
+            f"Module: {ctx.get('module', '')} | Lesson: {ctx.get('lesson', '')}\n"
+            f"What the lesson already contains:\n{ctx.get('existing', '')[:12000]}")
+
+
+def generate_block(*, block_type: str, instruction: str, language: str, context: dict, current: dict | None = None, rewrite: str | None = None) -> dict:
+    """One content block as a DRAFT (nothing is saved). The caller validates it like a hand-made block."""
+    if block_type not in ASSIST_TYPES:
+        raise AIError("This block type cannot be generated.", 422)
+    shape = _SHAPE.get(block_type, '{"title": str, "markdown": str (Markdown; math as LaTeX in $...$ / $$...$$)}')
+    system = ("You are an expert teacher writing course material. " + LANG_RULE.get(language, "") + GUARD + " "
+              "Be accurate: double-check every calculation and definition; never invent facts or sources. "
+              f"Produce {_KIND_HINT[block_type]}. Respond with ONLY one JSON object of this shape: {shape}.")
+    parts = ["<material>\n" + _block_context(context) + "\n</material>"]
+    if current:
+        parts.append("<material>\nCURRENT BLOCK CONTENT (to be rewritten):\n" + json.dumps(current, ensure_ascii=False)[:MAX_CONTEXT_CHARS] + "\n</material>")
+    if rewrite:
+        parts.append("Task: " + REWRITES.get(rewrite, "Improve it."))
+    if instruction.strip():
+        parts.append("Instruction from the teacher: " + instruction.strip()[:4000])
+    elif not rewrite:
+        parts.append("Task: write this block so it fits the lesson and does not repeat what the lesson already contains.")
+    data = _ask_json(system, "\n\n".join(parts), max_tokens=4000)
+    if not isinstance(data, dict):
+        raise AIError("The AI response could not be understood. Please try again.")
+    return data
+
+
+def generate_lesson_summary(*, language: str, context: dict, instruction: str = "") -> str:
+    system = ("You are an expert teacher. " + LANG_RULE.get(language, "") + GUARD + " Write the closing summary of a lesson in Markdown: "
+              "3-7 bullet key points, then (if relevant) the key formulas in LaTeX, then one sentence on what to practise next. "
+              "Use only what the lesson contains; do not add new topics. Respond with the Markdown only.")
+    user = "<material>\n" + _block_context(context) + "\n</material>"
+    if instruction.strip():
+        user += "\nInstruction from the teacher: " + instruction.strip()[:2000]
+    text = _provider().complete(system, user, max_tokens=2000).strip()
+    return re.sub(r"^```(?:markdown)?\s*|\s*```$", "", text)

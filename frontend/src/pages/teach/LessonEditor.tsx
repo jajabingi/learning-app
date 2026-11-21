@@ -7,6 +7,7 @@ import type { Block, BlockType, LessonDetail } from '@/api/types'
 import { BlockView } from '@/components/lms/BlockView'
 import { BLOCK_META, BLOCK_ORDER, BlockForm, DEFAULTS } from '@/components/lms/BlockEditor'
 import { SortableList } from '@/components/lms/SortableList'
+import { AiSummaryButton } from '@/components/lms/AiAssist'
 import { MarkdownEditor } from '@/components/MarkdownEditor'
 import { Page } from '@/components/Layout'
 import { Badge, Button, ConfirmDialog, ErrorState, Loading, Modal, Segmented } from '@/components/ui'
@@ -89,7 +90,7 @@ export default function LessonEditor() {
                 </div>
                 <div className="p-4">
                   {editing === b.id ? (
-                    <div className="space-y-3"><BlockForm type={b.type} data={draft} onChange={setDraft} /><div className="flex justify-end gap-2"><button className="btn" onClick={() => setEditing(null)}>{tt("Cancel")}</button><Button className="btn-primary" onClick={() => saveBlock(b)}>{tt("Save block")}</Button></div></div>
+                    <div className="space-y-3"><BlockForm type={b.type} data={draft} onChange={setDraft} lessonId={lid} /><div className="flex justify-end gap-2"><button className="btn" onClick={() => setEditing(null)}>{tt("Cancel")}</button><Button className="btn-primary" onClick={() => saveBlock(b)}>{tt("Save block")}</Button></div></div>
                   ) : <BlockView block={b} />}
                 </div>
               </div>
@@ -97,7 +98,7 @@ export default function LessonEditor() {
           {l.blocks.length === 0 && <p className="mb-3 text-sm text-muted">{tt("This lesson is empty. Add blocks in any order — video, text, formula, example, summary, questions…")}</p>}
           <button className="btn btn-primary mt-3" onClick={() => setAdding(true)}><Plus size={14} /> {tt("Add block")}</button>
           <div className="mt-8"><span className="label">{tt("Lesson summary (shown at the end of the lesson)")}</span><MarkdownEditor value={summary} onChange={setSummary} label={tt("Lesson summary")} minRows={4} />
-            <div className="mt-2"><Button disabled={summary === l.summary} onClick={() => savePatch({ summary }, 'Summary saved')}>{tt("Save summary")}</Button></div></div>
+            <div className="mt-2 flex flex-wrap gap-2"><AiSummaryButton lessonId={lid} current={summary} onDraft={setSummary} /><Button disabled={summary === l.summary} onClick={() => savePatch({ summary }, 'Summary saved')}>{tt("Save summary")}</Button></div></div>
         </>
       )}
 
@@ -115,8 +116,8 @@ function NewBlockDialog({ lid, init, onClose, onDone }: { lid: string; init: { t
   const toast = useToast()
   const m = useMutation({ mutationFn: () => post(`/teach/lessons/${lid}/blocks`, { type: init.type, data }), onSuccess: onDone, onError: (e) => toast.err(e instanceof Error ? e.message : tt("Failed")) })
   return (
-    <Modal open onClose={onClose} wide title={`New ${BLOCK_META[init.type].label.toLowerCase()} block`} footer={<><button className="btn" onClick={onClose}>{tt("Cancel")}</button><Button className="btn-primary" loading={m.isPending} onClick={() => m.mutate()}>{tt("Add block")}</Button></>}>
-      <BlockForm type={init.type} data={data} onChange={setData} />
+    <Modal open onClose={onClose} wide title={tt("New block: {type}", { type: BLOCK_META[init.type].label })} footer={<><button className="btn" onClick={onClose}>{tt("Cancel")}</button><Button className="btn-primary" loading={m.isPending} onClick={() => m.mutate()}>{tt("Add block")}</Button></>}>
+      <BlockForm type={init.type} data={data} onChange={setData} lessonId={lid} />
     </Modal>
   )
 }

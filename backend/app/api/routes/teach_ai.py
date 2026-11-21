@@ -104,3 +104,56 @@ def question_drafts(data: QuestionPrompt, user: User = Teacher):
     qs = _wrap(ai.generate_questions, material=data.prompt, count=data.count, level=data.level, types=data.types,
                language=data.language, steps=data.steps)
     return {"questions": qs}
+
+
+# ---------------- AI inside the lesson editor ----------------
+class BlockAssist(BaseModel):
+    lesson_id: uuid.UUID
+    block_type: Literal["text", "rich_text", "summary", "example", "table", "formula", "callout"]
+    instruction: str = Field(default="", max_length=4000)
+    language: Lang = "he"
+    current: dict | None = None  # the block being rewritten (draft content from the form)
+    rewrite: Literal["shorter", "simpler", "advanced", "add_example", "add_steps", "translate_en", "translate_he", "fix"] | None = None
+
+
+def _lesson_context(db, user: User, lesson_id: uuid.UUID) -> tuple[LmsLesson, dict]:
+    les = lms.own_lesson(db, user, lesson_id)  # 404 unless the lesson is in the teacher's own course
+    course = db.get(LmsCourse, les.course_id)
+    module = db.get(LmsModule, les.module_id)
+    texts = []
+    for b in les.blocks:
+        d = b.data or {}
+        piece = " ".join(str(d.get(k, "")) for k in ("title", "markdown", "latex", "description") if d.get(k))
+        if piece.strip():
+            texts.append(f"[{b.type}] {piece}")
+    return les, {"course": course.title, "level": course.difficulty, "audience": (course.target_audience or "")[:300],
+                 "module": module.title if module else "", "lesson": les.title, "existing": "\n".join(texts)}
+
+
+@router.post("/block-draft", dependencies=[Depends(ai_limiter)])
+def block_draft(data: BlockAssist, db: DB, user: User = Teacher):
+    """A DRAFT block for the lesson editor (create new, or rewrite the block being edited). Not saved: the teacher reviews it,
+    edits it and saves it through the normal block endpoints. The result is validated exactly like a hand-made block."""
+    les, ctx = _lesson_context(db, user, data.lesson_id)
+    raw = _wrap(ai.generate_block, block_type=data.block_type, instruction=data.instruction, language=data.language, context=ctx,
+                current=data.current, rewrite=data.rewrite)
+    owner = db.get(LmsCourse, les.course_id).owner_id
+    try:
+        clean = clean_block(db, owner, data.block_type, raw)
+    except HTTPException:
+        raise HTTPException(502, "The AI returned a block that could not be used. Please try again.")
+    return {"draft": {"type": data.block_type, "data": clean}}
+
+
+class SummaryAssist(BaseModel):
+    lesson_id: uuid.UUID
+    instruction: str = Field(default="", max_length=2000)
+    language: Lang = "he"
+
+
+@router.post("/lesson-summary", dependencies=[Depends(ai_limiter)])
+def lesson_summary(data: SummaryAssist, db: DB, user: User = Teacher):
+    _les, ctx = _lesson_context(db, user, data.lesson_id)
+    if not ctx["existing"].strip():
+        raise HTTPException(422, "Add some content to the lesson first: the summary is written from it.")
+    return {"markdown": _wrap(ai.generate_lesson_summary, language=data.language, context=ctx, instruction=data.instruction)}
