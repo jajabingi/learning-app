@@ -8,6 +8,7 @@ import { Badge, Button, Empty, ErrorState, Field, Loading, PageHeader, ProgressB
 import { useToast } from '@/contexts/toast'
 import { duration, relTime, shortDate } from '@/lib/format'
 import { tt, tl } from '@/i18n'
+import { StudentExamGrades } from './Exams'
 
 interface Progress { percent: number; completed_lessons: number; total_lessons: number; time_spent_seconds: number; last_activity_at: string | null }
 interface Enr { id: string; student_id: string; course_id: string; course_title: string; status: string; source: string; notes: string; starts_at: string | null; expires_at: string | null; completed_at: string | null; progress: Progress; student?: { id: string; email: string; display_name: string } }
@@ -42,6 +43,7 @@ export function StudentProfile() {
         <tbody>{s.enrollments.map((e) => <tr key={e.id} className="border-b border-line last:border-0"><td className="px-4 py-2"><Link to={`/teach/courses/${e.course_id}`} className="font-medium hover:underline">{e.course_title}</Link><div className="text-xs text-muted">{e.source}</div></td><td className="px-4 py-2"><Badge tone={TONE[e.status]} className="capitalize">{tl(e.status)}</Badge></td><td className="px-4 py-2 text-xs text-muted">{e.expires_at ? `until ${shortDate(e.expires_at.slice(0, 10))}` : tt("lifetime")}</td><td className="px-4 py-2"><div className="flex items-center gap-2"><span className="w-24"><ProgressBar value={e.progress.percent / 100} label={tt("Progress")} /></span><span className="text-xs tabnum">{e.progress.completed_lessons}/{e.progress.total_lessons}</span></div></td><td className="px-4 py-2 text-end tabnum">{duration(e.progress.time_spent_seconds)}</td></tr>)}</tbody></table></div>
       <h2 className="h-section mb-2 mt-6">{tt("Recent learning activity")}</h2>
       {s.activity.length === 0 ? <p className="text-sm text-muted">{tt("No lessons opened yet.")}</p> : <ul className="card divide-y divide-line">{s.activity.map((a) => <li key={a.lesson_id} className="flex items-center gap-3 px-4 py-2 text-sm"><span className="min-w-0 flex-1 truncate">{a.lesson_title}</span>{a.completed && <Badge tone="good">{tt("completed")}</Badge>}<span className="text-xs text-muted tabnum">{duration(a.time_spent_seconds)}</span><span className="w-20 text-end text-xs text-muted">{relTime(a.last_opened_at)}</span></li>)}</ul>}
+      <StudentExamGrades studentId={id} />
       <p className="mt-6 text-xs text-muted">{tt("Quiz results, assignments and payments will appear here as those features are released.")}</p>
     </Page>
   )

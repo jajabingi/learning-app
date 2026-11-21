@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Building2, BarChart3, BookOpenText, GraduationCap as TeachIcon, Users as TeamIcon, CalendarClock, FileText, GraduationCap, HelpCircle, LayoutDashboard, Library, LogOut, Menu as MenuIcon, Moon, Network, Search, Settings, Sun, X } from 'lucide-react'
+import { Building2, ClipboardCheck, BarChart3, BookOpenText, GraduationCap as TeachIcon, Users as TeamIcon, CalendarClock, FileText, GraduationCap, HelpCircle, LayoutDashboard, Library, LogOut, Menu as MenuIcon, Moon, Network, Search, Settings, Sun, X } from 'lucide-react'
 import { get } from '@/api/client'
 import { useAuth } from '@/contexts/auth'
 import { useTheme } from '@/contexts/theme'
 import { QuickCreateMenu, QuickCreateProvider } from './QuickCreate'
 import { SearchPalette } from './SearchPalette'
-import { cx } from './ui'import { tt } from '@/i18n'
+import { cx } from './ui'
+import { tt } from '@/i18n'
 
 
 const TEACH_NAV = [
   { to: '/teach', label: tt("Teaching"), Icon: TeachIcon, end: true },
   { to: '/teach/courses', label: tt("Courses"), Icon: BookOpenText },
+  { to: '/teach/exams', label: tt("Exams"), Icon: ClipboardCheck },
   { to: '/teach/institutions', label: tt("Institutions"), Icon: Building2 },
   { to: '/teach/students', label: tt("Students"), Icon: TeamIcon },
 ]

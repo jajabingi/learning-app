@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 from fastapi import Depends
 
-from app.api.routes import admin, ai, auth, insights, library, media, notes, public, questions, student, study, teach, teach_ai, teach_institutions, teach_practice, teach_students, transfer
+from app.api.routes import admin, ai, auth, insights, library, media, notes, public, questions, student, study, teach, teach_ai, teach_institutions, teach_practice, teach_students, teach_exams, student_exams, transfer
 from app.core.permissions import require_staff
 from app.core.config import get_settings
 from app.core.db import engine
@@ -88,3 +88,5 @@ app.include_router(teach_students.router, prefix="/api")  # staff + students/enr
 app.include_router(media.router, prefix="/api")        # video upload (staff) + signed playback
 app.include_router(admin.router, prefix="/api")      # admin only
 app.include_router(student.router, prefix="/api")    # student only
+app.include_router(teach_exams.router, prefix="/api")    # exams: staff + courses.manage
+app.include_router(student_exams.router, prefix="/api")  # exams: student only

@@ -17,9 +17,11 @@ import CourseEditor from './pages/teach/CourseEditor'
 import LessonEditor from './pages/teach/LessonEditor'
 import CoursePreview from './pages/teach/Preview'
 import Team from './pages/teach/Team'
+import { ExamAttemptGrade, ExamEditor, ExamResults, ExamsList } from './pages/teach/Exams'
 import Institutions from './pages/teach/Institutions'
 import { StudentProfile, StudentsList } from './pages/teach/Students'
 import { PracticeHome, PracticeSet } from './pages/student/Practice'
+import { ExamIntro, ExamResult, ExamRun, ExamsHome } from './pages/student/Exams'
 import { MyCourses, StudentAccount, StudentCourse, StudentHome, StudentLayout } from './pages/student/Portal'
 import { ExploreAll, ExploreInstitution, Landing, PublicCourse, PublicLayout } from './pages/public/Public'
 
@@ -88,8 +90,13 @@ export default function App() {
             <Route path="courses/:id" element={<StudentCourse />} />
             <Route path="practice" element={<PracticeHome />} />
             <Route path="practice/:id" element={<PracticeSet />} />
+            <Route path="exams" element={<ExamsHome />} />
+            <Route path="exams/:id" element={<ExamIntro />} />
+            <Route path="exam-result/:id" element={<ExamResult />} />
             <Route path="account" element={<StudentAccount />} />
           </Route>
+          {/* The exam itself is full-screen and distraction free: no navigation, no tutor */}
+          <Route path="exam/:id" element={<ExamRun />} />
           <Route path="*" element={<Navigate to="/my" replace />} />
         </Routes>
       </Suspense>
@@ -109,6 +116,10 @@ export default function App() {
           <Route path="teach/courses/:id" element={<StaffOnly><CourseEditor /></StaffOnly>} />
           <Route path="teach/courses/:id/preview" element={<StaffOnly><CoursePreview /></StaffOnly>} />
           <Route path="teach/courses/:id/lessons/:lid" element={<StaffOnly><LessonEditor /></StaffOnly>} />
+          <Route path="teach/exams" element={<StaffOnly><ExamsList /></StaffOnly>} />
+          <Route path="teach/exams/:id" element={<StaffOnly><ExamEditor /></StaffOnly>} />
+          <Route path="teach/exams/:id/results" element={<StaffOnly><ExamResults /></StaffOnly>} />
+          <Route path="teach/exam-attempts/:id" element={<StaffOnly><ExamAttemptGrade /></StaffOnly>} />
           <Route path="teach/institutions" element={<StaffOnly><Institutions /></StaffOnly>} />
           <Route path="teach/students" element={<StaffOnly><StudentsList /></StaffOnly>} />
           <Route path="teach/students/:id" element={<StaffOnly><StudentProfile /></StaffOnly>} />

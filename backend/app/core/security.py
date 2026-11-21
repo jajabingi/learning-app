@@ -112,3 +112,4 @@ class RateLimiter:
 auth_limiter = RateLimiter("auth", lambda: settings.rate_limit_auth_per_min)
 ai_limiter = RateLimiter("ai", lambda: settings.rate_limit_ai_per_min)
 public_limiter = RateLimiter("public", lambda: settings.rate_limit_public_per_min)
+exam_limiter = RateLimiter("exam", lambda: settings.rate_limit_exam_per_min)
