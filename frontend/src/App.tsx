@@ -17,6 +17,7 @@ import CourseEditor from './pages/teach/CourseEditor'
 import LessonEditor from './pages/teach/LessonEditor'
 import CoursePreview from './pages/teach/Preview'
 import Team from './pages/teach/Team'
+import { Privacy, Terms } from './pages/public/Legal'
 import { AdminAudit, AdminDashboard, AdminUserDetail, AdminUsers } from './pages/admin/Users'
 import { AuthCallback, ForgotPassword, Forbidden, LinkConfirm, ResetPassword, VerifyEmail } from './pages/AuthExtra'
 import { ExamAttemptGrade, ExamEditor, ExamResults, ExamsList } from './pages/teach/Exams'
@@ -68,6 +69,8 @@ const authLinkRoutes = (
 const publicRoutes = (
   <Route element={<PublicLayout />}>
     <Route index element={<Landing />} />
+    <Route path="terms" element={<Terms />} />
+    <Route path="privacy" element={<Privacy />} />
     <Route path="explore" element={<ExploreAll />} />
     <Route path="explore/:slug" element={<ExploreInstitution />} />
     <Route path="course/:id" element={<PublicCourse />} />

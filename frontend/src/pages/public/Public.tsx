@@ -64,7 +64,7 @@ export function PublicLayout() {
       </header>
       <main className="flex-1"><Outlet /></main>
       <footer className="border-t border-line bg-surface px-4 py-6 text-sm text-muted sm:px-8 lg:px-12">
-        <div className="flex flex-wrap items-center justify-between gap-3"><span>© Recall · {t('home.rights')}</span><Link to="/teachers" className="hover:text-fg">{t('home.teachersLogin')}</Link></div>
+        <div className="flex flex-wrap items-center justify-between gap-3"><span>© Recall · {t('home.rights')}</span><span className="flex gap-4"><Link to="/terms" className="hover:text-fg">תנאי שימוש</Link><Link to="/privacy" className="hover:text-fg">מדיניות פרטיות</Link></span><Link to="/teachers" className="hover:text-fg">{t('home.teachersLogin')}</Link></div>
       </footer>
     </div>
   )

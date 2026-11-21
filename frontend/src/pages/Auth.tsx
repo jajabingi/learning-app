@@ -72,6 +72,7 @@ export function AuthPage({ mode, staff }: { mode: 'login' | 'register'; staff?: 
           {isLogin && <p className="text-sm"><Link className="text-accent underline" to="/forgot-password">{tt("Forgot your password?")}</Link></p>}
           <Button type="submit" className="btn-primary btn-lg w-full" loading={busy}>{isLogin ? t('auth.loginBtn') : t('auth.registerBtn')}</Button>
         </form>
+        {!isLogin && <p className="mt-3 text-xs text-muted">בהרשמה אתם מאשרים את <Link to="/terms" className="underline">תנאי השימוש</Link> ואת <Link to="/privacy" className="underline">מדיניות הפרטיות</Link>.</p>}
         {!staff && <p className="mt-4 text-sm text-muted">
           {isLogin ? <>{t('auth.newHere')} <Link className="text-accent underline" to={other}>{t('auth.createAccount')}</Link></> : <>{t('auth.haveAccount')} <Link className="text-accent underline" to={other}>{t('auth.signInLink')}</Link></>}
         </p>}
