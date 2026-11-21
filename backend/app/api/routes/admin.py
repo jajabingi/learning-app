@@ -1,18 +1,21 @@
 """Administrator-only: user directory, roles, account status, permissions and the audit trail.
 Every change is enforced here on the server and recorded in the audit log."""
 import uuid
+from datetime import timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select
 
 from app.api.deps import DB
+from app.core.config import get_settings
 from app.core.permissions import ALL_PERMISSIONS, DEFAULT_TEACHER_PERMISSIONS, permissions_of, require_admin, set_permissions
 from app.core.security import hash_password
 from app.models.lms import LmsCourse, LmsEnrollment, LmsLessonProgress
 from app.models.user import AuditLog, User
 from app.schemas.lms import AdminUserCreate, AdminUserPatch
 from app.services import audit, identity
+from app.services.email import send_email
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -164,3 +167,18 @@ def patch_user(user_id: uuid.UUID, data: AdminUserPatch, db: DB, admin: User = D
         audit.log_event(db, "permissions_changed", actor=admin, target=u, permissions=sorted(data.permissions))
     db.flush()
     return _out(db, u)
+
+
+@router.post("/users/{user_id}/send-reset", status_code=202)
+def send_reset(user_id: uuid.UUID, db: DB, admin: User = Depends(require_admin)):
+    """E-mail the user a password-reset link (the admin never sees or sets their password)."""
+    u = _get(db, user_id)
+    if u.status == "suspended":
+        raise HTTPException(status.HTTP_409_CONFLICT, "The account is suspended")
+    settings = get_settings()
+    raw = identity.issue_token(db, "password_reset", u.id, timedelta(minutes=settings.reset_token_minutes))
+    link = identity.web_url("/reset-password", token=raw)
+    body = "An administrator sent you a link to choose a new password:" + chr(10) + link + chr(10) + chr(10) + f"It works once and expires in {settings.reset_token_minutes} minutes." + chr(10)
+    send_email(u.email, "Reset your Recall password", body)
+    audit.log_event(db, "password_reset_requested", actor=admin, target=u, by="admin")
+    return {"detail": "Reset email sent"}

@@ -136,7 +136,7 @@ class AdminUserCreate(BaseModel):
     email: str = Field(max_length=320, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     password: str = Field(min_length=8, max_length=72)
     display_name: str = Field(default="", max_length=100)
-    role: Literal["teacher", "admin"] = "teacher"
+    role: Literal["student", "teacher", "admin"] = "teacher"
     permissions: list[str] | None = None
 
 

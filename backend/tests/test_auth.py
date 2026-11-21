@@ -467,3 +467,16 @@ def test_expired_and_tampered_access_tokens(client):
 def test_audit_never_stores_secrets():
     from app.services import audit
     assert audit._clean({"password": "x", "access_token": "y", "client_secret": "z", "role": "teacher", "code": "1"}) == {"role": "teacher"}
+
+
+def test_admin_creates_students_and_sends_reset_email(client, admin_auth, teacher_auth):
+    r = client.post("/api/admin/users", json={"email": "New.Student@Example.com", "password": PW, "role": "student"}, headers=admin_auth)
+    assert r.status_code == 201 and r.json()["role"] == "student" and r.json()["email"] == "new.student@example.com"
+    assert client.post("/api/auth/login", json={"email": "new.student@example.com", "password": PW}).status_code == 200
+    assert client.post("/api/admin/users", json={"email": "x@example.com", "password": PW, "role": "student"}, headers=teacher_auth).status_code == 403
+    OUTBOX.clear()
+    assert client.post(f"/api/admin/users/{r.json()['id']}/send-reset", headers=admin_auth).status_code == 202
+    assert OUTBOX[-1]["to"] == "new.student@example.com" and "/reset-password?token=" in OUTBOX[-1]["body"]
+    assert client.post(f"/api/admin/users/{r.json()['id']}/send-reset", headers=teacher_auth).status_code == 403
+    client.patch(f"/api/admin/users/{r.json()['id']}", json={"status": "suspended"}, headers=admin_auth)
+    assert client.post(f"/api/admin/users/{r.json()['id']}/send-reset", headers=admin_auth).status_code == 409

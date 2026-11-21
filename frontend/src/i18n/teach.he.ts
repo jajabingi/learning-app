@@ -1275,5 +1275,8 @@ export const teachHe: Record<string, string> = {
   "This account is suspended. Contact an administrator.": "החשבון מושעה. פנו למנהל המערכת.",
   "An account with this email already exists. We sent a confirmation link to that address — open it to connect Google, or sign in with your password.": "כבר קיים חשבון עם אימייל זה. שלחנו קישור אישור לכתובת — פתחו אותו כדי לחבר את Google, או התחברו עם הסיסמה.",
   "This Google account is already connected to another user.": "חשבון Google זה כבר מחובר למשתמש אחר.",
-  "Registration is disabled.": "ההרשמה סגורה."
+  "Registration is disabled.": "ההרשמה סגורה.",
+  "New user": "משתמש חדש",
+  "Send password reset email": "שליחת אימייל לאיפוס סיסמה",
+  "Reset email sent": "אימייל לאיפוס נשלח"
 }

@@ -22,7 +22,7 @@ python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt   # Li
 cd frontend && npm install && npm run dev
 ```
 
-**Roles.** Public registration creates **student** accounts only. Staff (teacher/admin) accounts are created by an
+**Roles** (full guide: `docs/USERS.md`). Public registration creates **student** accounts only. Staff (teacher/admin) accounts are created by an
 admin (Teaching → *Team & permissions*) or on the command line:
 ```bash
 cd backend && .venv/Scripts/python -m app.cli create-admin --email you@example.com   # prompts for a password

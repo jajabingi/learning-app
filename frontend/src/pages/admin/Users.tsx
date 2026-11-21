@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
-import { get, patch } from '@/api/client'
+import { get, patch, post } from '@/api/client'
 import { Page } from '@/components/Layout'
-import { Badge, ConfirmDialog, Empty, ErrorState, Field, Loading, PageHeader, Stat } from '@/components/ui'
+import { Badge, Button, ConfirmDialog, Empty, ErrorState, Field, Loading, Modal, PageHeader, Stat } from '@/components/ui'
 import { useAuth } from '@/contexts/auth'
 import { useToast } from '@/contexts/toast'
 import { shortDate } from '@/lib/format'
@@ -50,7 +50,26 @@ export function AdminDashboard() {
   )
 }
 
+function NewUser({ onClose }: { onClose(): void }) {
+  const qc = useQueryClient()
+  const toast = useToast()
+  const [f, setF] = useState({ email: '', display_name: '', role: 'student', password: '' })
+  const m = useMutation({ mutationFn: () => post('/admin/users', f), onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-directory'] }); qc.invalidateQueries({ queryKey: ['admin-summary'] }); toast.ok(tt("Account created")); onClose() }, onError: (e) => toast.err(e instanceof Error ? e.message : tt("Failed")) })
+  return (
+    <Modal open onClose={onClose} title={tt("New user")}>
+      <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); m.mutate() }}>
+        <Field label={tt("Name")}><input className="field" dir="auto" value={f.display_name} onChange={(e) => setF({ ...f, display_name: e.target.value })} maxLength={100} /></Field>
+        <Field label={tt("Email")}><input type="email" required dir="ltr" className="field" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
+        <Field label={tt("Role")}><select className="field" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}><option value="student">{tt("Student")}</option><option value="teacher">{tt("Teacher")}</option><option value="admin">{tt("Admin")}</option></select></Field>
+        <Field label={tt("Temporary password")} hint={tt("At least 8 characters. Share it securely; they can change it in Settings.")}><input type="password" required minLength={8} dir="ltr" className="field" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} autoComplete="new-password" /></Field>
+        <div className="flex justify-end gap-2"><button type="button" className="btn" onClick={onClose}>{tt("Cancel")}</button><Button type="submit" className="btn-primary" loading={m.isPending}>{tt("Create")}</Button></div>
+      </form>
+    </Modal>
+  )
+}
+
 export function AdminUsers() {
+  const [creating, setCreating] = useState(false)
   const [q, setQ] = useState('')
   const [role, setRole] = useState('')
   const [status, setStatus] = useState('')
@@ -69,7 +88,7 @@ export function AdminUsers() {
         <div className="relative"><Search size={14} className="pointer-events-none absolute start-3 top-3 text-faint" /><input className="field w-64 ps-9" placeholder={tt("Search name or email…")} aria-label={tt("Search users")} value={q} onChange={(e) => set(() => setQ(e.target.value))} /></div>
         <select className="field w-auto" value={role} aria-label={tt("Filter by role")} onChange={(e) => set(() => setRole(e.target.value))}><option value="">{tt("All users")}</option><option value="student">{tt("Students")}</option><option value="teacher">{tt("Teachers")}</option><option value="admin">{tt("Administrators")}</option></select>
         <select className="field w-auto" value={status} aria-label={tt("Filter by status")} onChange={(e) => set(() => setStatus(e.target.value))}><option value="">{tt("All statuses")}</option><option value="active">{tt("Active")}</option><option value="suspended">{tt("Suspended")}</option><option value="pending_verification">{tt("Pending verification")}</option></select>
-        <Link to="/admin/audit" className="btn ms-auto">{tt("Audit log")}</Link>
+        <button className="btn btn-primary ms-auto" onClick={() => setCreating(true)}>{tt("New user")}</button><Link to="/admin/audit" className="btn">{tt("Audit log")}</Link>
       </div>
       {res.isLoading ? <Loading /> : res.error || !res.data ? <ErrorState error={res.error} retry={res.refetch} /> : res.data.items.length === 0 ? <div className="card"><Empty title={tt("No users match")} /></div> : (
         <div className="card overflow-x-auto"><table className="w-full min-w-[820px] text-sm"><thead><tr className="border-b border-line text-xs text-muted">
@@ -83,6 +102,7 @@ export function AdminUsers() {
       )}
       {res.data && <div className="mt-3 flex items-center justify-between text-sm text-muted tabnum"><span>{res.data.total} {tt("users")}</span>
         <div className="flex items-center gap-2"><button className="btn h-8" disabled={page <= 1} onClick={() => setPage(page - 1)}>{tt("Previous page")}</button><span>{tt("Page")} {page} {tt("of")} {pages}</span><button className="btn h-8" disabled={page >= pages} onClick={() => setPage(page + 1)}>{tt("Next page")}</button></div></div>}
+      {creating && <NewUser onClose={() => setCreating(false)} />}
     </Page>
   )
 }
@@ -120,6 +140,7 @@ export function AdminUserDetail() {
           <Field label={tt("Role")}><select className="field" value={u.role} disabled={self} onChange={(e) => roleChange(e.target.value as 'student' | 'teacher' | 'admin')}><option value="student">{tt("Student")}</option><option value="teacher">{tt("Teacher")}</option><option value="admin">{tt("Admin")}</option></select></Field>
           {self && <p className="text-xs text-muted">{tt("You cannot change your own role or status.")}</p>}
           <div className="flex flex-wrap gap-2">{u.role === 'student' && <button className="btn btn-primary" onClick={() => roleChange('teacher')}>{tt("Promote to teacher")}</button>}
+            <button className="btn" disabled={u.status === 'suspended'} onClick={() => post(`/admin/users/${u.id}/send-reset`).then(() => toast.ok(tt("Reset email sent"))).catch((e) => toast.err(e instanceof Error ? e.message : tt("Failed")))}>{tt("Send password reset email")}</button>
             {u.status === 'active' ? <button className="btn btn-danger" disabled={self} onClick={() => setConfirm({ title: tt("Suspend this account?"), message: tt("{email} will be signed out everywhere and will not be able to sign in. Their data is kept.", { email: u.email }), label: tt("Suspend"), body: { status: 'suspended' }, danger: true })}>{tt("Suspend")}</button>
               : <button className="btn btn-primary" onClick={() => setConfirm({ title: tt("Reactivate this account?"), message: tt("{email} will be able to sign in again.", { email: u.email }), label: tt("Reactivate"), body: { status: 'active' }, danger: false })}>{tt("Reactivate")}</button>}</div>
         </section>
