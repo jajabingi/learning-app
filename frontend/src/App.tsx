@@ -20,6 +20,8 @@ import Team from './pages/teach/Team'
 import { Privacy, Terms } from './pages/public/Legal'
 import { AdminAudit, AdminDashboard, AdminUserDetail, AdminUsers } from './pages/admin/Users'
 import { AuthCallback, ForgotPassword, Forbidden, LinkConfirm, ResetPassword, VerifyEmail } from './pages/AuthExtra'
+import { Finance } from './pages/teach/Payments'
+import { StudentPayments, SandboxPay, Receipt } from './pages/student/Payments'
 import { ExamAttemptGrade, ExamEditor, ExamResults, ExamsList } from './pages/teach/Exams'
 import Institutions from './pages/teach/Institutions'
 import { StudentProfile, StudentsList } from './pages/teach/Students'
@@ -109,6 +111,9 @@ export default function App() {
             <Route path="courses/:id" element={<StudentCourse />} />
             <Route path="practice" element={<PracticeHome />} />
             <Route path="practice/:id" element={<PracticeSet />} />
+            <Route path="payments" element={<StudentPayments />} />
+            <Route path="pay/sandbox/:id" element={<SandboxPay />} />
+            <Route path="receipt/:id" element={<Receipt />} />
             <Route path="exams" element={<ExamsHome />} />
             <Route path="exams/:id" element={<ExamIntro />} />
             <Route path="exam-result/:id" element={<ExamResult />} />
@@ -144,6 +149,7 @@ export default function App() {
           <Route path="teach/exams/:id" element={<StaffOnly><ExamEditor /></StaffOnly>} />
           <Route path="teach/exams/:id/results" element={<StaffOnly><ExamResults /></StaffOnly>} />
           <Route path="teach/exam-attempts/:id" element={<StaffOnly><ExamAttemptGrade /></StaffOnly>} />
+          <Route path="teach/finance" element={<StaffOnly><Finance /></StaffOnly>} />
           <Route path="teach/institutions" element={<StaffOnly><Institutions /></StaffOnly>} />
           <Route path="teach/students" element={<StaffOnly><StudentsList /></StaffOnly>} />
           <Route path="teach/students/:id" element={<StaffOnly><StudentProfile /></StaffOnly>} />

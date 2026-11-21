@@ -82,7 +82,7 @@ def course_out(c: LmsCourse, counts: dict | None = None) -> dict:
         "institution_id": str(c.institution_id) if c.institution_id else None, "instructor_name": c.instructor_name, "category": c.category, "difficulty": c.difficulty,
         "language": c.language, "status": c.status, "published_at": c.published_at.isoformat() if c.published_at else None,
         "price_amount": money(c.price_amount), "discount_amount": money(c.discount_amount), "currency": c.currency,
-        "enrollment_type": c.enrollment_type, "payment_policy": c.payment_policy, "access_days": c.access_days,
+        "enrollment_type": c.enrollment_type, "payment_policy": c.payment_policy, "access_days": c.access_days, "payment_instructions": c.payment_instructions,
         "objectives": c.objectives or [], "requirements": c.requirements or [], "target_audience": c.target_audience,
         "estimated_minutes": c.estimated_minutes, "completion_rule": c.completion_rule or {},
         "created_at": c.created_at.isoformat(), "updated_at": c.updated_at.isoformat(),

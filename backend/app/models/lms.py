@@ -54,6 +54,7 @@ class LmsCourse(IdMixin, TimestampMixin, Base):
     enrollment_type: Mapped[str] = mapped_column(String(12), default="manual")  # free | paid | manual
     payment_policy: Mapped[str] = mapped_column(String(24), default="full_payment")  # full_payment | any_payment | none
     access_days: Mapped[int | None] = mapped_column(Integer, nullable=True)  # null = lifetime access
+    payment_instructions: Mapped[str] = mapped_column(Text, default="", server_default="")  # how to pay offline (bank details, Bit, ...)
 
     objectives: Mapped[list] = mapped_column(JSONType, default=list)
     requirements: Mapped[list] = mapped_column(JSONType, default=list)

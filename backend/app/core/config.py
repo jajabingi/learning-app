@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     require_email_verification: bool = False  # True: new e-mail accounts stay `pending_verification` until the link is used
     reset_token_minutes: int = 60
     verify_token_hours: int = 48
+    # Online card payments: empty = off (offline/manual payments only). 'sandbox' is a TEST double, ignored in production.
+    payment_provider: str = ""
     # Outgoing e-mail. Without SMTP_HOST, messages are only logged (development) and kept in memory (tests).
     smtp_host: str = ""
     smtp_port: int = 587

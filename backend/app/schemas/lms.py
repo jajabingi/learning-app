@@ -73,6 +73,7 @@ class CoursePatch(BaseModel):
     currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
     enrollment_type: EnrollmentType | None = None
     payment_policy: PaymentPolicy | None = None
+    payment_instructions: str | None = Field(default=None, max_length=4000)
     access_days: int | None = Field(default=None, ge=1, le=3650)
     objectives: list[str] | None = Field(default=None, max_length=30)
     requirements: list[str] | None = Field(default=None, max_length=30)

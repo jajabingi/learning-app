@@ -242,7 +242,7 @@ export interface Course {
   cover_attachment_id: string | null; institution_id?: string | null; instructor_name: string; category: string
   difficulty: 'beginner' | 'intermediate' | 'advanced' | 'all'; language: string; status: CourseStatus
   published_at: string | null; price_amount: number; discount_amount: number | null; currency: string
-  enrollment_type: 'free' | 'paid' | 'manual'; payment_policy: 'full_payment' | 'any_payment' | 'none'
+  enrollment_type: 'free' | 'paid' | 'manual'; payment_policy: 'full_payment' | 'any_payment' | 'none'; payment_instructions?: string
   access_days: number | null; objectives: string[]; requirements: string[]; target_audience: string
   estimated_minutes: number; completion_rule: { min_lesson_percent: number; require_quizzes: boolean }
   created_at: string; updated_at: string

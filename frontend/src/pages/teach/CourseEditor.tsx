@@ -12,11 +12,12 @@ import { useToast } from '@/contexts/toast'
 import { STATUS_TONE } from './Courses'
 import { CourseStudents } from './Students'
 import { CoursePractice } from './CoursePractice'
+import { CoursePayments } from './Payments'
 import { AiStudio } from '@/components/AiStudio'
 import { tt, tl } from '@/i18n'
 
 
-type Tab = 'curriculum' | 'practice' | 'details' | 'access' | 'students'
+type Tab = 'curriculum' | 'practice' | 'details' | 'access' | 'students' | 'payments'
 
 export default function CourseEditor() {
   const { id = '' } = useParams()
@@ -48,11 +49,12 @@ export default function CourseEditor() {
           <Menu items={[c.status === 'archived' ? { label: tt("Restore to draft"), onClick: () => status.mutate('draft') } : { label: tt("Archive"), onClick: () => status.mutate('archived') }, 'sep', { label: tt("Delete…"), danger: true, onClick: () => setConfirm('delete') }]} />
         </div>
       </div>
-      <Tabs<Tab> value={tab} onChange={setTab} tabs={[{ id: 'curriculum', label: tt("Curriculum") }, { id: 'practice', label: tt("Practice & exams") }, { id: 'details', label: tt("Details") }, { id: 'access', label: tt("Pricing & access") }, { id: 'students', label: tt("Students · {n}", { n: c.enrollment_count ?? 0 }) }]} />
+      <Tabs<Tab> value={tab} onChange={setTab} tabs={[{ id: 'curriculum', label: tt("Curriculum") }, { id: 'practice', label: tt("Practice & exams") }, { id: 'details', label: tt("Details") }, { id: 'access', label: tt("Pricing & access") }, { id: 'students', label: tt("Students · {n}", { n: c.enrollment_count ?? 0 }) }, { id: 'payments', label: tt("Payments") }]} />
       <div className="pt-5">
         {tab === 'curriculum' && <Curriculum c={c} refresh={refresh} err={err} />}
         {tab === 'details' && <Details c={c} onSaved={refresh} />}
         {tab === 'access' && <Access c={c} onSaved={refresh} />}
+        {tab === 'payments' && <CoursePayments courseId={c.id} />}
         {tab === 'students' && <CourseStudents courseId={c.id} />}
         {tab === 'practice' && <CoursePractice courseId={c.id} />}
       </div>
@@ -168,21 +170,22 @@ function Details({ c, onSaved }: { c: CourseDetail; onSaved(): void }) {
 }
 
 function Access({ c, onSaved }: { c: CourseDetail; onSaved(): void }) {
-  const [f, setF] = useState({ enrollment_type: c.enrollment_type, price_amount: String(c.price_amount), discount_amount: c.discount_amount == null ? '' : String(c.discount_amount), currency: c.currency, payment_policy: c.payment_policy, access_days: c.access_days == null ? '' : String(c.access_days) })
+  const [f, setF] = useState({ enrollment_type: c.enrollment_type, price_amount: String(c.price_amount), discount_amount: c.discount_amount == null ? '' : String(c.discount_amount), currency: c.currency, payment_policy: c.payment_policy, access_days: c.access_days == null ? '' : String(c.access_days), payment_instructions: c.payment_instructions ?? '' })
   const save = useSave(c.id, onSaved)
   const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }))
   const free = f.enrollment_type === 'free'
   return (
-    <form className="max-w-2xl space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate({ enrollment_type: f.enrollment_type, price_amount: free ? '0' : f.price_amount || '0', discount_amount: free || f.discount_amount === '' ? null : f.discount_amount, currency: f.currency.toUpperCase(), payment_policy: f.payment_policy, access_days: f.access_days === '' ? null : Number(f.access_days) }) }}>
+    <form className="max-w-2xl space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate({ enrollment_type: f.enrollment_type, price_amount: free ? '0' : f.price_amount || '0', discount_amount: free || f.discount_amount === '' ? null : f.discount_amount, currency: f.currency.toUpperCase(), payment_policy: f.payment_policy, access_days: f.access_days === '' ? null : Number(f.access_days), payment_instructions: f.payment_instructions }) }}>
       <Field label={tt("How do students get access?")}><select className="field" value={f.enrollment_type} onChange={(e) => set('enrollment_type', e.target.value)}><option value="manual">{tt("Manual enrollment only (I enroll students)")}</option><option value="paid">{tt("Paid course")}</option><option value="free">{tt("Free course")}</option></select></Field>
       {!free && <div className="grid gap-3 sm:grid-cols-3">
         <Field label={tt("Price")}><input type="number" min={0} step="0.01" className="field" value={f.price_amount} onChange={(e) => set('price_amount', e.target.value)} /></Field>
         <Field label={tt("Discount price (optional)")}><input type="number" min={0} step="0.01" className="field" value={f.discount_amount} onChange={(e) => set('discount_amount', e.target.value)} /></Field>
         <Field label={tt("Currency")}><input className="field" value={f.currency} maxLength={3} onChange={(e) => set('currency', e.target.value.toUpperCase())} /></Field>
       </div>}
-      {f.enrollment_type === 'paid' && <Field label={tt("Grant access when…")} hint={tt("Applied once payments are enabled.")}><select className="field" value={f.payment_policy} onChange={(e) => set('payment_policy', e.target.value)}><option value="full_payment">{tt("The full price is paid")}</option><option value="any_payment">{tt("Any payment is received")}</option><option value="none">{tt("Immediately (collect payment separately)")}</option></select></Field>}
+      {f.enrollment_type === 'paid' && <Field label={tt("Grant access when…")} hint={tt("Decides when a student's payment unlocks the course.")}><select className="field" value={f.payment_policy} onChange={(e) => set('payment_policy', e.target.value)}><option value="full_payment">{tt("The full price is paid")}</option><option value="any_payment">{tt("Any payment is received")}</option><option value="none">{tt("Immediately (collect payment separately)")}</option></select></Field>}
       <Field label={tt("Access duration (days, empty = lifetime)")}><input type="number" min={1} max={3650} className="field" value={f.access_days} onChange={(e) => set('access_days', e.target.value)} /></Field>
-      <p className="rounded border border-line bg-raised/50 p-3 text-xs text-muted">{tt("Pricing is stored now; payments, balances and automatic enrollment are added in the payments release. Until then, access is granted only through enrollments.")}</p>
+      {f.enrollment_type === 'paid' && <Field label={tt("How to pay (shown to the student who ordered)")} hint={tt("Bank details, Bit/PayBox number, cheque instructions…")}><textarea className="field" dir="auto" rows={4} value={f.payment_instructions} maxLength={4000} onChange={(e) => set('payment_instructions', e.target.value)} /></Field>}
+      <p className="rounded border border-line bg-raised/50 p-3 text-xs text-muted">{tt("Students see the amount they owe and these instructions. You record payments in the Payments tab; access starts automatically according to the rule above.")}</p>
       <Button type="submit" className="btn-primary" loading={save.isPending}>{tt("Save")}</Button>
     </form>
   )

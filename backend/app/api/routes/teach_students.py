@@ -15,7 +15,9 @@ from app.core.permissions import P_ENROLLMENTS_MANAGE, P_STUDENTS_MANAGE, requir
 from app.models.base import as_utc, utcnow
 from app.models.lms import ENROLLMENT_STATUSES, LmsCourse, LmsEnrollment, LmsLesson, LmsLessonProgress
 from app.models.user import User
+from app.models.payment import LmsOrder
 from app.services import lms, progress
+from app.services import payments as pay
 
 router = APIRouter(prefix="/teach", tags=["teacher-students"])
 StudentsMgr = Depends(require_permission(P_STUDENTS_MANAGE))
@@ -64,7 +66,11 @@ def list_students(db: DB, user: User = StudentsMgr, q: str | None = None, course
         enr = list(db.scalars(select(LmsEnrollment).where(LmsEnrollment.student_id == s.id, LmsEnrollment.course_id.in_(_my_course_ids(db, user)))))
         last = db.scalar(select(func.max(LmsLessonProgress.last_opened_at)).where(
             LmsLessonProgress.student_id == s.id, LmsLessonProgress.course_id.in_(_my_course_ids(db, user))))
+        orders = list(db.scalars(select(LmsOrder).where(LmsOrder.student_id == s.id, LmsOrder.status != "cancelled",
+                                                        LmsOrder.course_id.in_(_my_course_ids(db, user)))))
         out.append({"id": str(s.id), "email": s.email, "display_name": s.display_name, "is_active": s.is_active,
+                    "balance_due": float(sum((max(pay.balance(o), pay.ZERO) for o in orders), pay.ZERO)),
+                    "overdue": float(sum((pay.overdue_amount(o) for o in orders), pay.ZERO)),
                     "enrollments": len(enr), "active_enrollments": sum(1 for e in enr if e.status in ("active", "completed")),
                     "last_activity_at": as_utc(last).isoformat() if last else None, "joined_at": s.created_at.isoformat()})
     return out
