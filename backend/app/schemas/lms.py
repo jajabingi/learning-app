@@ -142,6 +142,7 @@ class AdminUserCreate(BaseModel):
 
 class AdminUserPatch(BaseModel):
     role: Literal["student", "teacher", "admin"] | None = None
-    is_active: bool | None = None
+    is_active: bool | None = None  # legacy: False == suspended
+    status: Literal["active", "suspended"] | None = None
     permissions: list[str] | None = None
     display_name: str | None = Field(default=None, max_length=100)

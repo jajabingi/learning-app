@@ -28,18 +28,19 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
-def _make_token(user_id: uuid.UUID, kind: str, delta: timedelta) -> str:
+def _make_token(user_id: uuid.UUID, kind: str, delta: timedelta, version: int = 0) -> str:
     now = datetime.now(timezone.utc)
-    payload = {"sub": str(user_id), "type": kind, "iat": now, "exp": now + delta, "jti": uuid.uuid4().hex}
+    # `tv` = the user's token_version at issue time; bumping it server-side revokes every older token
+    payload = {"sub": str(user_id), "type": kind, "iat": now, "exp": now + delta, "jti": uuid.uuid4().hex, "tv": version}
     return jwt.encode(payload, settings.secret_key, algorithm=ALGO)
 
 
-def create_access_token(user_id: uuid.UUID) -> str:
-    return _make_token(user_id, "access", timedelta(minutes=settings.access_token_minutes))
+def create_access_token(user_id: uuid.UUID, version: int = 0) -> str:
+    return _make_token(user_id, "access", timedelta(minutes=settings.access_token_minutes), version)
 
 
-def create_refresh_token(user_id: uuid.UUID) -> str:
-    return _make_token(user_id, "refresh", timedelta(days=settings.refresh_token_days))
+def create_refresh_token(user_id: uuid.UUID, version: int = 0) -> str:
+    return _make_token(user_id, "refresh", timedelta(days=settings.refresh_token_days), version)
 
 
 def create_media_token(attachment_id: uuid.UUID, minutes: int = 360) -> str:
@@ -60,28 +61,39 @@ def decode_media_token(token: str) -> uuid.UUID:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired media link")
 
 
-def decode_token(token: str, kind: str) -> uuid.UUID:
+def decode_token_payload(token: str, kind: str) -> dict:
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[ALGO])
         if payload.get("type") != kind:
             raise ValueError("wrong token type")
-        return uuid.UUID(payload["sub"])
+        uuid.UUID(payload["sub"])
+        return payload
     except (jwt.PyJWTError, ValueError, KeyError):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
+
+
+def decode_token(token: str, kind: str) -> uuid.UUID:
+    return uuid.UUID(decode_token_payload(token, kind)["sub"])
+
+
+def user_for_token(db: Session, token: str, kind: str):
+    """The user a token belongs to, only if the account is active and the token has not been revoked."""
+    from app.models.user import User
+
+    payload = decode_token_payload(token, kind)
+    user = db.get(User, uuid.UUID(payload["sub"]))
+    if user is None or user.status != "active" or int(payload.get("tv", 0)) != user.token_version:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid user")
+    return user
 
 
 def get_current_user(
     creds: HTTPAuthorizationCredentials | None = Depends(bearer), db: Session = Depends(get_db)
 ):
-    from app.models.user import User
-
     if creds is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
-    user_id = decode_token(creds.credentials, "access")
-    user = db.get(User, user_id)
-    if user is None or not user.is_active:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid user")
-    return user
+    return user_for_token(db, creds.credentials, "access")
+
 
 
 class RateLimiter:

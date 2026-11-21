@@ -24,6 +24,25 @@ class LoginIn(BaseModel):
     password: str = Field(max_length=200)
 
 
+class EmailIn(BaseModel):
+    email: EmailStr
+
+
+class TokenIn(BaseModel):
+    token: str = Field(min_length=10, max_length=200)
+
+
+class CodeIn(BaseModel):
+    code: str = Field(min_length=10, max_length=200)
+
+
+class ResetIn(BaseModel):
+    token: str = Field(min_length=10, max_length=200)
+    new_password: str
+
+    _pw = field_validator("new_password")(_check_password)
+
+
 class RefreshIn(BaseModel):
     refresh_token: str
 
@@ -45,6 +64,10 @@ class UserOut(BaseModel):
     daily_new_limit: int
     daily_review_goal: int
     timezone: str
+    status: str = "active"
+    has_password: bool = True
+    providers: list[str] = []
+    email_verified: bool = False
 
 
 class UserUpdate(BaseModel):

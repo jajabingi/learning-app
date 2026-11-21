@@ -29,6 +29,10 @@ export interface User {
   daily_new_limit: number
   daily_review_goal: number
   timezone: string
+  status?: string
+  has_password?: boolean
+  providers?: string[]
+  email_verified?: boolean
 }
 
 export interface Tag { id: string; name: string; color: string; question_count?: number }
@@ -252,4 +256,4 @@ export type BlockType =
   | 'question' | 'quiz' | 'assignment' | 'external_link' | 'callout' | 'resource'
 export interface Block { id: string; type: BlockType; position: number; is_visible?: boolean; data: Record<string, any> }
 export interface LessonDetail extends LessonBrief { summary: string; module_id: string; course_id: string; blocks: Block[]; preview?: boolean }
-export interface TeamUser { id: string; email: string; display_name: string; role: 'student' | 'teacher' | 'admin'; is_active: boolean; permissions: string[]; created_at: string }
+export interface TeamUser { id: string; email: string; display_name: string; role: 'student' | 'teacher' | 'admin'; is_active: boolean; status?: string; permissions: string[]; created_at: string }

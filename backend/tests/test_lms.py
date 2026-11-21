@@ -57,6 +57,13 @@ def test_every_route_denies_students_and_anonymous(client, student_auth):
         ("GET", "/api/health"), ("POST", "/api/auth/register"), ("POST", "/api/auth/login"),
         ("POST", "/api/auth/refresh"), ("GET", "/api/auth/me"), ("PATCH", "/api/auth/me"),
         ("POST", "/api/auth/change-password"),
+        # auth flows: anonymous by design (each is single-use-token / state protected, covered in test_auth.py)
+        ("GET", "/api/auth/config"), ("POST", "/api/auth/password/forgot"), ("POST", "/api/auth/password/reset"),
+        ("POST", "/api/auth/email/verify"), ("POST", "/api/auth/email/resend"), ("GET", "/api/auth/google/start"),
+        ("GET", "/api/auth/google/callback"), ("POST", "/api/auth/google/exchange"), ("POST", "/api/auth/link/confirm"),
+        # any signed-in user, student included
+        ("POST", "/api/auth/logout"), ("GET", "/api/auth/identities"), ("DELETE", "/api/auth/identities/{identity_id}"),
+        ("POST", "/api/auth/google/link/start"),
     }
     sid = str(uuid.uuid4())
     checked = 0
@@ -109,9 +116,11 @@ def test_admin_user_management_guards(client, admin_auth):
     assert client.get("/api/teach/courses", headers=h).status_code == 200
     client.patch(f"/api/admin/users/{uid}", json={"is_active": False}, headers=admin_auth)
     assert client.get("/api/teach/courses", headers=h).status_code == 401
-    # role change is effective immediately even with an old token
+    # suspension revoked that session for good: reactivating does not resurrect the old token
     client.patch(f"/api/admin/users/{uid}", json={"is_active": True, "role": "student"}, headers=admin_auth)
-    assert client.get("/api/teach/courses", headers=h).status_code == 403
+    assert client.get("/api/teach/courses", headers=h).status_code == 401
+    fresh = client.post("/api/auth/login", json={"email": "new@x.com", "password": "longenough1"}).json()
+    assert client.get("/api/teach/courses", headers={"Authorization": f"Bearer {fresh['access_token']}"}).status_code == 403  # now a student
 
 
 # ---------------- course management ----------------

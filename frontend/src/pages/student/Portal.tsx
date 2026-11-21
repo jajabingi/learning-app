@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/auth'
 import { useTheme } from '@/contexts/theme'
 import { useToast } from '@/contexts/toast'
 import { t } from '@/i18n'
+import { SignInMethods } from '../AuthExtra'
 import { duration, shortDate } from '@/lib/format'
 
 const NAV: [string, string, boolean][] = [['/my', 'nav.dashboard', true], ['/courses', 'nav.myCourses', false], ['/practice', 'nav.practice', false], ['/exams', 'nav.exams', false], ['/explore', 'nav.explore', false], ['/account', 'nav.account', false]]
@@ -125,6 +126,7 @@ export function StudentAccount() {
     <div className="max-w-xl space-y-5">
       <h1 className="text-3xl font-semibold tracking-tight">{t('student.account')}</h1>
       <section className="card space-y-3 p-5"><Field label={t('student.name')}><input className="field text-base" dir="auto" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} /></Field><Field label={t('student.email')}><input className="field text-base" dir="ltr" value={user?.email ?? ''} disabled /></Field><Button className="btn-primary" loading={busy === 'p'} onClick={() => run('p', () => updateUser({ display_name: name }), t('student.saved'))}>{t('common.save')}</Button></section>
+      <SignInMethods />
       <section className="card space-y-3 p-5"><h2 className="text-base font-semibold">{t('student.changePassword')}</h2><Field label={t('student.currentPassword')}><input type="password" dir="ltr" className="field text-base" value={cur} onChange={(e) => setCur(e.target.value)} autoComplete="current-password" /></Field><Field label={t('student.newPassword')} hint={t('auth.passwordHint')}><input type="password" dir="ltr" className="field text-base" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" /></Field><Button loading={busy === 'w'} disabled={!cur || next.length < 8} onClick={() => run('w', async () => { await post('/auth/change-password', { current_password: cur, new_password: next }); setCur(''); setNext('') }, t('student.passwordChanged'))}>{t('student.changePassword')}</Button></section>
     </div>
   )

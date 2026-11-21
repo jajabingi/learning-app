@@ -7,7 +7,8 @@ interface AuthCtx {
   user: User | null
   loading: boolean
   login(email: string, password: string): Promise<void>
-  register(email: string, password: string, name: string): Promise<void>
+  register(email: string, password: string, name: string): Promise<{ verificationRequired: boolean }>
+  loginWithTokens(t: Tokens): Promise<void>
   logout(): void
   updateUser(patch: Partial<User>): Promise<void>
 }
@@ -18,20 +19,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(!!tokenStore.get())
   const qc = useQueryClient()
 
-  const logout = useCallback(() => {
+  const clear = useCallback(() => {
     tokenStore.set(null)
     setUser(null)
     qc.clear()
   }, [qc])
+  // explicit sign-out also revokes the account's tokens on the server (best effort)
+  const logout = useCallback(() => {
+    if (tokenStore.get()) post('/auth/logout').catch(() => undefined)
+    clear()
+  }, [clear])
 
   useEffect(() => {
-    setAuthLostHandler(logout)
+    setAuthLostHandler(clear)
     if (!tokenStore.get()) return
     get<User>('/auth/me')
       .then(setUser)
       .catch(() => tokenStore.set(null))
       .finally(() => setLoading(false))
-  }, [logout])
+  }, [clear])
 
   const value = useMemo<AuthCtx>(
     () => ({
@@ -42,7 +48,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(await get<User>('/auth/me'))
       },
       async register(email, password, name) {
-        tokenStore.set(await post<Tokens>('/auth/register', { email, password, display_name: name }))
+        const r = await post<Tokens & { verification_required?: boolean }>('/auth/register', { email, password, display_name: name })
+        if (r.verification_required) return { verificationRequired: true }
+        tokenStore.set(r)
+        setUser(await get<User>('/auth/me'))
+        return { verificationRequired: false }
+      },
+      async loginWithTokens(t) {
+        tokenStore.set(t)
         setUser(await get<User>('/auth/me'))
       },
       logout,

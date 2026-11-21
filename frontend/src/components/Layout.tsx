@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Building2, ClipboardCheck, BarChart3, BookOpenText, GraduationCap as TeachIcon, Users as TeamIcon, CalendarClock, FileText, GraduationCap, HelpCircle, LayoutDashboard, Library, LogOut, Menu as MenuIcon, Moon, Network, Search, Settings, Sun, X } from 'lucide-react'
+import { Building2, ClipboardCheck, BarChart3, BookOpenText, GraduationCap as TeachIcon, Users as TeamIcon, CalendarClock, FileText, GraduationCap, HelpCircle, LayoutDashboard, Library, LogOut, Menu as MenuIcon, ShieldCheck, Moon, Network, Search, Settings, Sun, X } from 'lucide-react'
 import { get } from '@/api/client'
 import { useAuth } from '@/contexts/auth'
 import { useTheme } from '@/contexts/theme'
@@ -50,6 +50,8 @@ function NavList({ onNavigate, due, admin }: { onNavigate?(): void; due: number;
     <nav className="flex-1 space-y-0.5 overflow-y-auto px-2" aria-label={tt("Main")}>
       <div className="px-2.5 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wide text-faint">{tt("Teaching")}</div>
       {TEACH_NAV.map(item)}
+      {admin && item({ to: '/admin', label: tt("Admin dashboard"), Icon: ShieldCheck, end: true })}
+      {admin && item({ to: '/admin/users', label: tt("Users"), Icon: TeamIcon })}
       {admin && item({ to: '/teach/team', label: tt("Team & permissions"), Icon: TeamIcon })}
       <div className="px-2.5 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-faint">{tt("Personal workspace")}</div>
       {NAV.map(({ to, label, Icon, end, badge }) => (

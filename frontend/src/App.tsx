@@ -17,6 +17,8 @@ import CourseEditor from './pages/teach/CourseEditor'
 import LessonEditor from './pages/teach/LessonEditor'
 import CoursePreview from './pages/teach/Preview'
 import Team from './pages/teach/Team'
+import { AdminAudit, AdminDashboard, AdminUserDetail, AdminUsers } from './pages/admin/Users'
+import { AuthCallback, ForgotPassword, Forbidden, LinkConfirm, ResetPassword, VerifyEmail } from './pages/AuthExtra'
 import { ExamAttemptGrade, ExamEditor, ExamResults, ExamsList } from './pages/teach/Exams'
 import Institutions from './pages/teach/Institutions'
 import { StudentProfile, StudentsList } from './pages/teach/Students'
@@ -41,7 +43,8 @@ function Protected({ children }: { children: React.ReactNode }) {
 /** Teacher/admin only (UI convenience — every API call is authorised again on the server). */
 function StaffOnly({ children, admin }: { children: React.ReactNode; admin?: boolean }) {
   const { user } = useAuth()
-  if (!user || user.role === 'student' || (admin && user.role !== 'admin')) return <Navigate to="/" replace />
+  if (!user) return <Navigate to="/login" replace />
+  if (user.role === 'student' || (admin && user.role !== 'admin')) return <Forbidden />  // the API refuses these calls too
   return <>{children}</>
 }
 
@@ -51,6 +54,17 @@ function RedirectToLogin() {
 }
 
 /** The site root is ALWAYS the public home page (landing). Signed-in users reach their area from the header button. */
+/** Auth landing pages that work whether or not someone is signed in (email links, Google redirect). */
+const authLinkRoutes = (
+  <>
+    <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/verify-email" element={<VerifyEmail />} />
+    <Route path="/auth/link" element={<LinkConfirm />} />
+    <Route path="/auth/callback" element={<AuthCallback />} />
+  </>
+)
+
 const publicRoutes = (
   <Route element={<PublicLayout />}>
     <Route index element={<Landing />} />
@@ -70,6 +84,7 @@ export default function App() {
           <Route path="/login" element={<AuthPage mode="login" />} />
           <Route path="/register" element={<AuthPage mode="register" />} />
           <Route path="/teachers" element={<AuthPage mode="login" staff />} />
+          {authLinkRoutes}
           {publicRoutes}
           <Route path="*" element={<RedirectToLogin />} />
         </Routes>
@@ -83,6 +98,7 @@ export default function App() {
           <Route path="/login" element={<AuthPage mode="login" />} />
           <Route path="/register" element={<AuthPage mode="register" />} />
           <Route path="/teachers" element={<AuthPage mode="login" staff />} />
+          {authLinkRoutes}
           {publicRoutes}
           <Route element={<StudentLayout />}>
             <Route path="my" element={<StudentHome />} />
@@ -108,8 +124,13 @@ export default function App() {
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
         <Route path="/teachers" element={<AuthPage mode="login" staff />} />
+        {authLinkRoutes}
         {publicRoutes}
         <Route element={<Layout />}>
+          <Route path="admin" element={<StaffOnly admin><AdminDashboard /></StaffOnly>} />
+          <Route path="admin/users" element={<StaffOnly admin><AdminUsers /></StaffOnly>} />
+          <Route path="admin/users/:id" element={<StaffOnly admin><AdminUserDetail /></StaffOnly>} />
+          <Route path="admin/audit" element={<StaffOnly admin><AdminAudit /></StaffOnly>} />
           <Route path="dashboard" element={<StaffOnly><Dashboard /></StaffOnly>} />
           <Route path="teach" element={<StaffOnly><TeachDashboard /></StaffOnly>} />
           <Route path="teach/courses" element={<StaffOnly><CoursesList /></StaffOnly>} />
@@ -137,7 +158,7 @@ export default function App() {
         </Route>
         {/* Study session is full-screen and distraction free: no sidebar */}
         <Route path="study/session/:id" element={<StudySession />} />
-        <Route path="*" element={<Navigate to="/teach" replace />} />
+        <Route path="*" element={<Navigate to={user.role === 'admin' ? '/admin' : '/teach'} replace />} />
       </Routes>
     </Suspense>
   )

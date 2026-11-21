@@ -22,6 +22,22 @@ class Settings(BaseSettings):
     allow_registration: bool = True
     auto_migrate: bool = True  # run `alembic upgrade head` on startup (disable when migrating in the entrypoint)
 
+    # Public URL of the web app (OAuth results and e-mail links point here)
+    frontend_url: str = "http://localhost:5174"
+    # Google Sign-In (OAuth 2.0 / OpenID Connect, authorization-code flow with PKCE, verified server-side)
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
+    require_email_verification: bool = False  # True: new e-mail accounts stay `pending_verification` until the link is used
+    reset_token_minutes: int = 60
+    verify_token_hours: int = 48
+    # Outgoing e-mail. Without SMTP_HOST, messages are only logged (development) and kept in memory (tests).
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    email_from: str = "Recall <no-reply@localhost>"
+
     cors_origins: str = "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173"
 
     upload_dir: str = str(BACKEND_DIR / "uploads")
@@ -49,6 +65,10 @@ class Settings(BaseSettings):
         if len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters")
         return v
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
 
     @property
     def is_production(self) -> bool:

@@ -8,6 +8,7 @@ import { useTheme } from '@/contexts/theme'
 import { useToast } from '@/contexts/toast'
 import { useAiStatus } from '@/hooks/queries'
 import { tt } from '@/i18n'
+import { SignInMethods } from './AuthExtra'
 
 function Section({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return <section className="card mb-5 p-5"><h2 className="text-sm font-semibold">{title}</h2>{desc && <p className="mb-4 mt-0.5 text-sm text-muted">{desc}</p>}<div className={desc ? '' : 'mt-3'}>{children}</div></section>
@@ -82,6 +83,8 @@ export default function SettingsPage() {
         </div>
         <p className="mt-3 text-xs text-muted">{tt("CSV columns: title, content, question_type, difficulty, answer, explanation, subject, topics (;-separated), tags (;-separated), source, options (|-separated, correct option prefixed with *). PDF and Word import are planned.")}</p>
       </Section>
+
+      <SignInMethods />
 
       <Section title={tt("Change password")}>
         <div className="grid gap-3 sm:grid-cols-2"><Field label={tt("Current password")}><input dir="ltr" type="password" className="field" value={cur} onChange={(e) => setCur(e.target.value)} autoComplete="current-password" /></Field><Field label={tt("New password")} hint={tt("At least 8 characters")}><input dir="ltr" type="password" className="field" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" /></Field></div>
