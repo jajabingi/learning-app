@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     require_email_verification: bool = False  # True: new e-mail accounts stay `pending_verification` until the link is used
     reset_token_minutes: int = 60
     verify_token_hours: int = 48
+    # Optional first-run bootstrap: if BOTH are set and the database has NO admin yet, one is created at startup.
+    # (Useful on hosts without a shell. Remove the password variable afterwards.)
+    bootstrap_admin_email: str = ""
+    bootstrap_admin_password: str = ""
     # Outgoing e-mail. Without SMTP_HOST, messages are only logged (development) and kept in memory (tests).
     smtp_host: str = ""
     smtp_port: int = 587
@@ -58,6 +62,16 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4o"
     openai_base_url: str = "https://api.openai.com/v1"
+
+    @field_validator("database_url")
+    @classmethod
+    def _normalise_db_url(cls, v: str) -> str:
+        """Hosting providers hand out postgres:// or postgresql:// URLs; SQLAlchemy needs the driver name."""
+        v = v.strip()
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg2://" + v[len(prefix):]
+        return v
 
     @field_validator("secret_key")
     @classmethod

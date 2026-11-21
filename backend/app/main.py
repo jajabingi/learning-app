@@ -30,6 +30,9 @@ async def lifespan(_: FastAPI):
         cfg.set_main_option("script_location", str(backend / "migrations"))
         command.upgrade(cfg, "head")
         log.info("database migrated to head")
+    from app.bootstrap import ensure_first_admin
+
+    ensure_first_admin()
     yield
 
 
