@@ -66,17 +66,33 @@ export function CoursesList() {
   )
 }
 
+interface Tpl { id: string; title: string; description: string; modules: number; lessons: number; outline: string[] }
+
 function NewCourse({ open, onClose }: { open: boolean; onClose(): void }) {
   const [title, setTitle] = useState('')
   const [subtitle, setSubtitle] = useState('')
+  const [tpl, setTpl] = useState('blank')
   const nav = useNavigate()
   const toast = useToast()
-  const m = useMutation({ mutationFn: () => post<Course>('/teach/courses', { title, subtitle }), onSuccess: (c) => { onClose(); setTitle(''); setSubtitle(''); nav(`/teach/courses/${c.id}`) }, onError: (e) => toast.err(e instanceof Error ? e.message : tt("Failed")) })
+  const templates = useQuery({ queryKey: ['course-templates'], queryFn: () => get<Tpl[]>('/teach/course-templates'), enabled: open, staleTime: 300_000 })
+  const m = useMutation({
+    mutationFn: () => (tpl === 'blank' ? post<Course>('/teach/courses', { title, subtitle }) : post<Course>('/teach/courses/from-template', { template_id: tpl, title, subtitle })),
+    onSuccess: (c) => { onClose(); setTitle(''); setSubtitle(''); setTpl('blank'); nav(`/teach/courses/${c.id}`) }, onError: (e) => toast.err(e instanceof Error ? e.message : tt("Failed")),
+  })
+  const options: Tpl[] = [{ id: 'blank', title: tt("Blank course"), description: tt("Start from scratch and add modules yourself."), modules: 0, lessons: 0, outline: [] }, ...(templates.data ?? [])]
   return (
-    <Modal open={open} onClose={onClose} title={tt("New course")}>
-      <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (title.trim()) m.mutate() }}>
-        <Field label={tt("Title")}><input className="field" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus placeholder={tt("e.g. Investment Fundamentals")} /></Field>
-        <Field label={tt("Subtitle (optional)")}><input className="field" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} maxLength={300} /></Field>
+    <Modal open={open} onClose={onClose} wide title={tt("New course")}>
+      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (title.trim()) m.mutate() }}>
+        <div><span className="label">{tt("Start from a template")}</span>
+          <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={tt("Course template")}>{options.map((o) => (
+            <button type="button" key={o.id} role="radio" aria-checked={tpl === o.id} onClick={() => setTpl(o.id)} className={`rounded-lg border p-3 text-start ${tpl === o.id ? 'border-accent bg-accent/10' : 'border-line hover:border-faint'}`}>
+              <div dir="auto" className="text-sm font-medium">{o.title}</div><p dir="auto" className="mt-0.5 text-xs text-muted">{o.description}</p>
+              {o.modules > 0 && <p className="mt-1 text-xs text-faint">{tt("{m} modules · {l} lessons", { m: o.modules, l: o.lessons })}</p>}
+            </button>))}</div>
+          {tpl !== 'blank' && <p className="mt-2 text-xs text-muted">{tt("A template creates the structure only. Lines marked [להשלמה] are placeholders for you to write (or generate with AI). Nothing is visible to students until you publish.")}</p>}
+        </div>
+        <Field label={tt("Title")}><input className="field" dir="auto" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus placeholder={tt("e.g. Investment Fundamentals")} /></Field>
+        <Field label={tt("Subtitle (optional)")}><input className="field" dir="auto" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} maxLength={300} /></Field>
         <p className="text-xs text-muted">{tt("Courses start as drafts. Students cannot see them until you publish.")}</p>
         <div className="flex justify-end gap-2"><button type="button" className="btn" onClick={onClose}>{tt("Cancel")}</button><Button type="submit" className="btn-primary" loading={m.isPending}>{tt("Create course")}</Button></div>
       </form>

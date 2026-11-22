@@ -119,3 +119,16 @@ def test_ownership_and_roles(client, teacher_auth, teacher2_auth, student_auth):
         assert client.post("/api/teach/ai/block-draft", json={"lesson_id": l1, "block_type": "text"}).status_code == 401
     finally:
         set_provider_override(None)
+
+
+def test_true_false_options_are_hebrew_in_hebrew_courses(client, teacher_auth):
+    reply = ('[{"title": "t", "content": "השמיים כחולים?", "question_type": "true_false", "difficulty": "easy", "answer": "נכון", "explanation": "e",'
+             ' "options": [{"text": "True", "is_correct": true}, {"text": "False", "is_correct": false}]}]')
+    use(reply)
+    try:
+        q = client.post("/api/teach/ai/question-drafts", json={"prompt": "שאלה על צבעים", "count": 1, "language": "he"}, headers=teacher_auth).json()["questions"][0]
+        assert [o["text"] for o in q["options"]] == ["נכון", "לא נכון"]
+        q = client.post("/api/teach/ai/question-drafts", json={"prompt": "a question about colours", "count": 1, "language": "en"}, headers=teacher_auth).json()["questions"][0]
+        assert [o["text"] for o in q["options"]] == ["True", "False"]
+    finally:
+        set_provider_override(None)

@@ -100,6 +100,10 @@ def generate_questions(*, material: str, count: int, level: str, types: list[str
             d = _DraftQ.model_validate(raw)
             opts = [OptionIn(text=str(o.get("text", ""))[:2000], is_correct=bool(o.get("is_correct")))
                     for o in d.options if str(o.get("text", "")).strip()]
+            if language == "he" and d.question_type == "true_false":  # the UI is Hebrew: show נכון / לא נכון, not True / False
+                he = {"true": "נכון", "false": "לא נכון"}
+                for o in opts:
+                    o.text = he.get(o.text.strip().lower(), o.text)
             if d.question_type in ("multiple_choice", "true_false") and not any(o.is_correct for o in opts):
                 d.question_type, opts = "open_ended", []
             out.append(QuestionCreate(

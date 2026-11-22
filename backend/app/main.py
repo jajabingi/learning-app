@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 from fastapi import Depends
 
-from app.api.routes import admin, ai, auth, insights, library, media, notes, public, questions, student, study, teach, teach_ai, teach_institutions, teach_practice, teach_students, teach_exams, student_exams, transfer
+from app.api.routes import admin, ai, auth, insights, library, media, notes, public, questions, student, study, teach, teach_ai, teach_institutions, teach_practice, teach_students, teach_templates, teach_exams, student_exams, transfer
 from app.core.permissions import require_staff
 from app.core.config import get_settings
 from app.core.db import engine
@@ -84,6 +84,7 @@ for r in (library.router, questions.router, notes.router, study.router, insights
     app.include_router(r, prefix="/api", dependencies=[Depends(require_staff)])
 app.include_router(teach.router, prefix="/api")      # staff + courses.manage (see router dependencies)
 app.include_router(public.router, prefix="/api")          # PUBLIC catalog: no login, rate limited
+app.include_router(teach_templates.router, prefix="/api")  # course templates (staff + courses.manage)
 app.include_router(teach_institutions.router, prefix="/api")
 app.include_router(teach_ai.router, prefix="/api")
 app.include_router(teach_practice.router, prefix="/api")  # practice sets by topic (staff + courses.manage)

@@ -1410,5 +1410,11 @@ export const teachHe: Record<string, string> = {
   "Translate to English": "תרגום לאנגלית",
   "Translate to Hebrew": "תרגום לעברית",
   "Fix and polish": "תיקון וליטוש",
-  "New block: {type}": "בלוק חדש: {type}"
+  "New block: {type}": "בלוק חדש: {type}",
+  "Blank course": "קורס ריק",
+  "Start from scratch and add modules yourself.": "מתחילים מאפס ומוסיפים מודולים בעצמכם.",
+  "Start from a template": "התחלה מתבנית",
+  "Course template": "תבנית קורס",
+  "{m} modules · {l} lessons": "{m} מודולים · {l} שיעורים",
+  "A template creates the structure only. Lines marked [להשלמה] are placeholders for you to write (or generate with AI). Nothing is visible to students until you publish.": "התבנית יוצרת את המבנה בלבד. שורות המסומנות [להשלמה] הן מקומות שאתם משלימים (או יוצרים עם AI). דבר לא גלוי לתלמידים עד שתפרסמו."
 }
