@@ -12,7 +12,8 @@ from app.core.permissions import P_COURSES_MANAGE, require_permission
 from app.core.security import ai_limiter
 from app.models.lms import LmsBlock, LmsCourse, LmsLesson, LmsModule
 from app.models.user import User
-from app.services import lms
+from app.core.config import get_settings
+from app.services import ai_usage, lms
 from app.services.ai import service as ai
 from app.services.ai.provider import AIError, get_provider
 from app.services.lms_blocks import clean_block
@@ -23,6 +24,11 @@ log = logging.getLogger("recall.ai")
 Lang = Literal["he", "en"]
 
 
+def _quota(db, user: User) -> None:
+    """Daily cost control per teacher. Counted inside the request transaction: a failed AI call is rolled back and not counted."""
+    ai_usage.consume(db, user, "teacher", get_settings().ai_teacher_daily_limit)
+
+
 def _wrap(fn, *a, **kw):
     try:
         return fn(*a, **kw)
@@ -31,9 +37,11 @@ def _wrap(fn, *a, **kw):
 
 
 @router.get("/status")
-def status():
+def status(db: DB, user: User = Teacher):
     p = get_provider()
-    return {"enabled": p is not None, "provider": p.name if p else None, "model": p.model if p else None}
+    limit = get_settings().ai_teacher_daily_limit
+    return {"enabled": p is not None, "provider": p.name if p else None, "model": p.model if p else None,
+            "used_today": ai_usage.used_today(db, user, "teacher"), "daily_limit": limit}
 
 
 class ModulePrompt(BaseModel):
@@ -43,7 +51,8 @@ class ModulePrompt(BaseModel):
 
 
 @router.post("/module-draft", dependencies=[Depends(ai_limiter)])
-def module_draft(data: ModulePrompt, user: User = Teacher):
+def module_draft(data: ModulePrompt, db: DB, user: User = Teacher):
+    _quota(db, user)
     return {"draft": _wrap(ai.generate_module_draft, prompt=data.prompt, language=data.language, lessons=data.lessons)}
 
 
@@ -98,9 +107,10 @@ class QuestionPrompt(BaseModel):
 
 
 @router.post("/question-drafts", dependencies=[Depends(ai_limiter)])
-def question_drafts(data: QuestionPrompt, user: User = Teacher):
+def question_drafts(data: QuestionPrompt, db: DB, user: User = Teacher):
     """Draft questions (with step-by-step solutions). Save the ones you keep with POST /questions/batch, then add them
     to a practice set."""
+    _quota(db, user)
     qs = _wrap(ai.generate_questions, material=data.prompt, count=data.count, level=data.level, types=data.types,
                language=data.language, steps=data.steps)
     return {"questions": qs}
@@ -135,6 +145,7 @@ def block_draft(data: BlockAssist, db: DB, user: User = Teacher):
     """A DRAFT block for the lesson editor (create new, or rewrite the block being edited). Not saved: the teacher reviews it,
     edits it and saves it through the normal block endpoints. The result is validated exactly like a hand-made block."""
     les, ctx = _lesson_context(db, user, data.lesson_id)
+    _quota(db, user)
     raw = _wrap(ai.generate_block, block_type=data.block_type, instruction=data.instruction, language=data.language, context=ctx,
                 current=data.current, rewrite=data.rewrite)
     owner = db.get(LmsCourse, les.course_id).owner_id
@@ -156,4 +167,5 @@ def lesson_summary(data: SummaryAssist, db: DB, user: User = Teacher):
     _les, ctx = _lesson_context(db, user, data.lesson_id)
     if not ctx["existing"].strip():
         raise HTTPException(422, "Add some content to the lesson first: the summary is written from it.")
+    _quota(db, user)
     return {"markdown": _wrap(ai.generate_lesson_summary, language=data.language, context=ctx, instruction=data.instruction)}

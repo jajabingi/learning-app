@@ -9,6 +9,7 @@ import { Badge, Button, ErrorState, Loading, ProgressBar, cx } from '@/component
 import { useToast } from '@/contexts/toast'
 import { duration } from '@/lib/format'
 import { t } from '@/i18n'
+import { AskTutor } from './AskTutor'
 import { BlockView } from './BlockView'
 
 type L = LessonBrief & { completed?: boolean }
@@ -128,6 +129,7 @@ function Lesson({ id, path, student, courseId, onNext, nextId }: { id: string; p
       {l.blocks.length === 0 && <p className="text-sm text-muted">{t('viewer.noContent')}</p>}
       {l.blocks.map((b: Block) => <BlockView key={b.id} block={b} />)}
       {l.summary && <section className="rounded-lg border border-accent/30 bg-accent/5 p-4"><h3 dir="auto" className="h-section mb-1 text-accent">{t('viewer.lessonSummary')}</h3><Markdown>{l.summary}</Markdown></section>}
+      {student && <AskTutor lessonId={id} />}
       {student && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3">
           <Button className={completed ? '' : 'btn-primary'} loading={busy} onClick={toggle}>{completed ? <><Check size={14} /> {t('viewer.completedUndo')}</> : t('viewer.markComplete')}</Button>

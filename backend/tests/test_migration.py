@@ -33,7 +33,7 @@ command.upgrade(cfg,'head')
     assert c.execute("select role from users order by email").fetchall() == [("admin",), ("admin",)]
     assert dict(c.execute("select email, status from users").fetchall()) == {"old@x.com": "active", "off@x.com": "suspended"}   # 0007 backfill
     assert c.execute("select token_version from users").fetchall() == [(0,), (0,)]
-    for t in ("user_identities", "audit_logs", "auth_tokens", "lms_exams", "lms_orders", "lms_payments", "lms_installments"):
+    for t in ("user_identities", "audit_logs", "auth_tokens", "lms_exams", "lms_orders", "lms_payments", "lms_installments", "ai_usage"):
         assert c.execute(f"select count(*) from {t}").fetchone()[0] == 0
     assert c.execute("select name from subjects").fetchall() == [("Finance",)]
     for t in ("lms_courses", "lms_modules", "lms_lessons", "lms_blocks", "lms_enrollments", "user_permissions"):

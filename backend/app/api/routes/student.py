@@ -9,13 +9,18 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from app.api.deps import DB
+from app.core.config import get_settings
+from app.core.security import ai_limiter
 from app.api.routes.notes import attachment_response
 from app.core.permissions import require_student
 from app.models.base import as_utc, utcnow
+from app.models.exam import LmsExam, LmsExamAttempt
 from app.models.lms import LmsBlock, LmsCourse, LmsEnrollment, LmsLesson, LmsModule
 from app.models.question import Attachment
 from app.models.user import User
-from app.services import access, lms, progress
+from app.services import access, ai_usage, lms, progress
+from app.services.ai import service as ai
+from app.services.ai.provider import AIError, get_provider
 from app.services import payments as pay
 
 router = APIRouter(prefix="/student", tags=["student"], dependencies=[Depends(require_student)])
@@ -341,3 +346,52 @@ def request_access(course_id: uuid.UUID, db: DB, user: User = Student):
         pay.ensure_order(db, user, c)
         db.refresh(e)  # a free-of-charge order may have activated it immediately
     return {"id": str(e.id), "status": e.status}
+
+
+# ---------------- AI tutor for one lesson ----------------
+class TutorTurn(BaseModel):
+    role: str = Field(pattern="^(student|tutor)$")
+    text: str = Field(max_length=2000)
+
+
+class AskIn(BaseModel):
+    question: str = Field(min_length=2, max_length=2000)
+    history: list[TutorTurn] = Field(default_factory=list, max_length=6)
+
+
+_TEXTY = ("title", "markdown", "latex", "description")
+
+
+def _lesson_material(db, lesson: LmsLesson) -> str:
+    """Only what a student may see: visible blocks, never solutions, question banks or other lessons."""
+    d = lms.lesson_detail(db, lesson, teacher=False)
+    parts = []
+    for b in d["blocks"]:
+        if b["type"] in ("question", "quiz", "assignment", "video", "image", "pdf", "file", "resource", "external_link"):
+            continue
+        data = b.get("data") or {}
+        text = " ".join(str(data.get(k, "")) for k in _TEXTY if data.get(k))
+        if text.strip():
+            parts.append(f"[{b['type']}] {text}")
+    if d.get("summary"):
+        parts.append(f"[summary] {d['summary']}")
+    return "\n".join(parts)
+
+
+@router.post("/lessons/{lesson_id}/ask", dependencies=[Depends(ai_limiter)])
+def ask_tutor(lesson_id: uuid.UUID, data: AskIn, db: DB, user: User = Student):
+    course, _module, lesson = access.student_lesson(db, user, lesson_id)  # enrolled + published, else 404
+    # no help with graded work: the tutor is switched off while the student has an exam running in this course
+    running = db.scalar(select(LmsExamAttempt.id).join(LmsExam, LmsExam.id == LmsExamAttempt.exam_id)
+                        .where(LmsExamAttempt.student_id == user.id, LmsExamAttempt.status == "in_progress", LmsExam.course_id == course.id).limit(1))
+    if running is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "The AI tutor is not available while an exam is in progress.")
+    if get_provider() is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The AI tutor is not available right now.")
+    remaining = ai_usage.consume(db, user, "student_tutor", get_settings().ai_student_daily_limit)  # rolled back if the AI call fails
+    try:
+        answer = ai.student_tutor(question=data.question, course=course.title, lesson=lesson.title, material=_lesson_material(db, lesson),
+                                  history=[t.model_dump() for t in data.history])
+    except AIError as e:
+        raise HTTPException(e.status_code, e.message)
+    return {"answer": answer, "remaining": remaining}

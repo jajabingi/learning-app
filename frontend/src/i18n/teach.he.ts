@@ -1416,5 +1416,10 @@ export const teachHe: Record<string, string> = {
   "Start from a template": "התחלה מתבנית",
   "Course template": "תבנית קורס",
   "{m} modules · {l} lessons": "{m} מודולים · {l} שיעורים",
-  "A template creates the structure only. Lines marked [להשלמה] are placeholders for you to write (or generate with AI). Nothing is visible to students until you publish.": "התבנית יוצרת את המבנה בלבד. שורות המסומנות [להשלמה] הן מקומות שאתם משלימים (או יוצרים עם AI). דבר לא גלוי לתלמידים עד שתפרסמו."
+  "A template creates the structure only. Lines marked [להשלמה] are placeholders for you to write (or generate with AI). Nothing is visible to students until you publish.": "התבנית יוצרת את המבנה בלבד. שורות המסומנות [להשלמה] הן מקומות שאתם משלימים (או יוצרים עם AI). דבר לא גלוי לתלמידים עד שתפרסמו.",
+  "Ask the AI tutor about this lesson": "שאלו את מורה ה-AI על השיעור",
+  "Ask about what is written in this lesson. Answers come from the lesson and may contain mistakes: check them against the material or ask your teacher.": "שאלו על מה שכתוב בשיעור הזה. התשובות מבוססות על השיעור ועלולות להכיל טעויות: בדקו מול החומר או שאלו את המורה.",
+  "Type your question…": "כתבו את השאלה…",
+  "Your question": "השאלה שלכם",
+  "Questions left today: {n}": "שאלות שנותרו להיום: {n}"
 }

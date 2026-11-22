@@ -25,7 +25,7 @@ const hasContent = (d: Data) => !!(d?.markdown || d?.latex || d?.description)
 /** "Create with AI" for one content block. Generates a DRAFT; nothing is saved until the teacher applies it and saves the block. */
 export function AiAssistButton({ lessonId, type, data, onApply }: { lessonId: string; type: string; data: Data; onApply(d: Data): void }) {
   const [open, setOpen] = useState(false)
-  const status = useQuery({ queryKey: ['ai-status'], queryFn: () => get<{ enabled: boolean }>('/teach/ai/status'), staleTime: 60_000 })
+  const status = useQuery({ queryKey: ['ai-status'], queryFn: () => get<{ enabled: boolean; used_today?: number; daily_limit?: number }>('/teach/ai/status'), staleTime: 60_000 })
   if (!AI_BLOCK_TYPES.includes(type)) return null
   return (
     <>

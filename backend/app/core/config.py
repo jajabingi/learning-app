@@ -58,6 +58,9 @@ class Settings(BaseSettings):
 
     rate_limit_auth_per_min: int = 30
     rate_limit_ai_per_min: int = 20
+    # Daily AI quotas per user (cost control). 0 = unlimited.
+    ai_student_daily_limit: int = 20
+    ai_teacher_daily_limit: int = 300
     rate_limit_public_per_min: int = 120
     rate_limit_exam_per_min: int = 240
     # OpenAI / ChatGPT (or any OpenAI-compatible API). Select with AI_PROVIDER=openai

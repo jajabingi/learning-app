@@ -6,3 +6,4 @@ from app.models.user import AuditLog, AuthToken, User, UserIdentity, UserPermiss
 from app.models.lms import LmsBlock, LmsCourse, LmsEnrollment, LmsInstitution, LmsLesson, LmsLessonProgress, LmsModule, LmsPracticeAttempt, LmsPracticeItem, LmsPracticeSet  # noqa: F401
 from app.models.exam import LmsExam, LmsExamAnswer, LmsExamAttempt, LmsExamQuestion  # noqa: F401
 from app.models.payment import LmsInstallment, LmsOrder, LmsPayment  # noqa: F401
+from app.models.ai_usage import AiUsage  # noqa: F401
