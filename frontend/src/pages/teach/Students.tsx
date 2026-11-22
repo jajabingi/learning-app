@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Users } from 'lucide-react'
-import { get, patch, post } from '@/api/client'
+import { download, get, patch, post } from '@/api/client'
 import { Page } from '@/components/Layout'
 import { Badge, Button, Empty, ErrorState, Field, Loading, PageHeader, ProgressBar } from '@/components/ui'
 import { useToast } from '@/contexts/toast'
@@ -16,13 +16,13 @@ const TONE: Record<string, 'good' | 'warn' | 'bad' | 'neutral' | 'accent'> = { a
 
 export function StudentsList() {
   const [q, setQ] = useState('')
-  const res = useQuery({ queryKey: ['teach-students', q], queryFn: () => get<{ id: string; email: string; display_name: string; enrollments: number; active_enrollments: number; last_activity_at: string | null; joined_at: string }[]>('/teach/students', { q }) })
+  const res = useQuery({ queryKey: ['teach-students', q], queryFn: () => get<{ id: string; email: string; display_name: string; balance_due: number; overdue: number; enrollments: number; active_enrollments: number; last_activity_at: string | null; joined_at: string }[]>('/teach/students', { q }) })
   return (
     <Page>
-      <PageHeader title={tt("Students")} subtitle={tt("Students enrolled in your courses. To add a student to a course, open the course → Students.")} actions={<input className="field w-64" placeholder={tt("Search name or email…")} value={q} onChange={(e) => setQ(e.target.value)} aria-label={tt("Search students")} />} />
+      <PageHeader title={tt("Students")} subtitle={tt("Students enrolled in your courses. To add a student to a course, open the course → Students.")} actions={<div className="flex gap-2"><button className="btn" onClick={() => download('/teach/students-export.csv', 'students.csv')}>{tt("Export (CSV)")}</button><input className="field w-64" placeholder={tt("Search name or email…")} value={q} onChange={(e) => setQ(e.target.value)} aria-label={tt("Search students")} /></div>} />
       {res.isLoading ? <Loading /> : res.error ? <ErrorState error={res.error} retry={res.refetch} /> : !res.data?.length ? <div className="card"><Empty title={q ? tt("No matching students") : tt("No students yet")} icon={<Users size={28} />}>{q ? '' : tt("Students register themselves, then you enroll them from a course’s Students tab.")}</Empty></div> : (
-        <div className="card overflow-x-auto"><table className="w-full min-w-[560px] text-sm"><thead><tr className="border-b border-line text-start text-xs text-muted"><th className="px-4 py-2 font-medium">{tt("Student")}</th><th className="px-4 py-2 text-end font-medium">{tt("Courses")}</th><th className="px-4 py-2 text-end font-medium">{tt("Last activity")}</th></tr></thead>
-          <tbody>{res.data.map((s) => <tr key={s.id} className="border-b border-line last:border-0 hover:bg-raised/50"><td className="px-4 py-2"><Link to={`/teach/students/${s.id}`} className="font-medium hover:underline">{s.display_name}</Link><div className="text-xs text-muted">{s.email}</div></td><td className="px-4 py-2 text-end tabnum">{s.active_enrollments} {tt("active /")} {s.enrollments}</td><td className="px-4 py-2 text-end text-muted">{s.last_activity_at ? relTime(s.last_activity_at) : '—'}</td></tr>)}</tbody></table></div>
+        <div className="card overflow-x-auto"><table className="w-full min-w-[560px] text-sm"><thead><tr className="border-b border-line text-start text-xs text-muted"><th className="px-4 py-2 font-medium">{tt("Student")}</th><th className="px-4 py-2 text-end font-medium">{tt("Courses")}</th><th className="px-4 py-2 text-end font-medium">{tt("Balance due")}</th><th className="px-4 py-2 text-end font-medium">{tt("Last activity")}</th></tr></thead>
+          <tbody>{res.data.map((s) => <tr key={s.id} className="border-b border-line last:border-0 hover:bg-raised/50"><td className="px-4 py-2"><Link to={`/teach/students/${s.id}`} className="font-medium hover:underline">{s.display_name}</Link><div className="text-xs text-muted">{s.email}</div></td><td className="px-4 py-2 text-end tabnum">{s.active_enrollments} {tt("active /")} {s.enrollments}</td><td className="px-4 py-2 text-end tabnum">{s.balance_due > 0 ? <span className={s.overdue > 0 ? 'text-bad' : ''} dir="ltr">{s.balance_due.toFixed(2)}</span> : '—'}</td><td className="px-4 py-2 text-end text-muted">{s.last_activity_at ? relTime(s.last_activity_at) : '—'}</td></tr>)}</tbody></table></div>
       )}
     </Page>
   )

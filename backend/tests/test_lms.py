@@ -64,6 +64,7 @@ def test_every_route_denies_students_and_anonymous(client, student_auth):
         # any signed-in user, student included
         ("POST", "/api/auth/logout"), ("GET", "/api/auth/identities"), ("DELETE", "/api/auth/identities/{identity_id}"),
         ("POST", "/api/auth/google/link/start"),
+        ("POST", "/api/payments/webhook/{provider}"),
     }
     sid = str(uuid.uuid4())
     checked = 0

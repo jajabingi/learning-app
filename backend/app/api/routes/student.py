@@ -16,6 +16,7 @@ from app.models.lms import LmsBlock, LmsCourse, LmsEnrollment, LmsLesson, LmsMod
 from app.models.question import Attachment
 from app.models.user import User
 from app.services import access, lms, progress
+from app.services import payments as pay
 
 router = APIRouter(prefix="/student", tags=["student"], dependencies=[Depends(require_student)])
 Student = Depends(require_student)
@@ -76,7 +77,7 @@ def dashboard(db: DB, user: User = Student):
 @router.get("/courses/{course_id}")
 def my_course(course_id: uuid.UUID, db: DB, user: User = Student):
     c, e = access.student_course(db, user, course_id)
-    base = {k: v for k, v in lms.course_out(c).items() if k not in ("created_at", "updated_at", "slug", "status", "enrollment_type", "payment_policy")}
+    base = {k: v for k, v in lms.course_out(c).items() if k not in ("created_at", "updated_at", "slug", "status", "enrollment_type", "payment_policy", "payment_instructions")}
     p = progress.course_progress(db, user.id, c)
     cur = lms.curriculum(db, c, teacher=False)
     done = set(p["completed_ids"])
@@ -326,6 +327,8 @@ def request_access(course_id: uuid.UUID, db: DB, user: User = Student):
     e = access.get_enrollment(db, user, c.id)
     if e is not None:
         if access.enrollment_grants_access(e) or e.status == "pending":
+            if e.status == "pending" and c.enrollment_type == "paid":
+                pay.ensure_order(db, user, c)  # the student sees what they owe and how to pay
             return {"id": str(e.id), "status": e.status}
         if e.status == "expired":
             e.status = "pending"
@@ -334,4 +337,7 @@ def request_access(course_id: uuid.UUID, db: DB, user: User = Student):
     e = LmsEnrollment(student_id=user.id, course_id=c.id, status="pending", source="purchase", notes="Access requested by the student")
     db.add(e)
     db.flush()
+    if c.enrollment_type == "paid":
+        pay.ensure_order(db, user, c)
+        db.refresh(e)  # a free-of-charge order may have activated it immediately
     return {"id": str(e.id), "status": e.status}

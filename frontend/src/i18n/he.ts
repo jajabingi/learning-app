@@ -12,7 +12,7 @@ export const he = {
     teacherTitle: 'כניסת מורים', teacherHint: 'אזור זה מיועד למורים ולמנהלים בלבד.', notTeacher: 'החשבון הזה אינו חשבון מורה. תלמידים נכנסים דרך עמוד הכניסה הרגיל.',
     newHere: 'חדש כאן?', createAccount: 'יצירת חשבון', haveAccount: 'כבר יש לך חשבון?', signInLink: 'כניסה', somethingWrong: 'משהו השתבש',
   },
-  nav: { courses: 'קורסים', faq: 'שאלות נפוצות', home: 'דף הבית', dashboard: 'הדף שלי', myCourses: 'הקורסים שלי', practice: 'תרגול', exams: 'מבחנים', explore: 'גלו קורסים', account: 'החשבון שלי', allCourses: 'כל הקורסים' },
+  nav: { courses: 'קורסים', faq: 'שאלות נפוצות', home: 'דף הבית', dashboard: 'הדף שלי', myCourses: 'הקורסים שלי', practice: 'תרגול', exams: 'מבחנים', payments: 'התשלומים שלי', explore: 'גלו קורסים', account: 'החשבון שלי', allCourses: 'כל הקורסים' },
   landing: {
     title: 'בחרו איפה ללמוד', subtitle: 'בחרו מוסד לימוד או נושא, התחילו עם שיעורים חינמיים, והמשיכו לקורס המלא כשתרצו.',
     institutions: 'מוסדות לימוד', coursesCount: '{n} קורסים', oneCourse: 'קורס אחד', noInstitutions: 'עדיין לא פורסמו מוסדות לימוד.', browseAll: 'צפייה בכל הקורסים',

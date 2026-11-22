@@ -187,7 +187,7 @@ export function PublicCourse() {
   const state: StudentState | undefined = st.data
 
   const openLesson = (l: { id: string; is_free_preview: boolean }) => { if (state?.has_access) return nav(`/courses/${id}?lesson=${l.id}`); l.is_free_preview ? setSel(l.id) : setPaywall(true) }
-  const request = useMutation({ mutationFn: () => post(`/student/courses/${id}/request-access`), onSuccess: () => { qc.invalidateQueries({ queryKey: ['student-catalog-course', id] }); toast.ok(t('course.requestSent')) }, onError: (e) => toast.err(e instanceof Error ? e.message : t('common.somethingWrong')) })
+  const request = useMutation({ mutationFn: () => post(`/student/courses/${id}/request-access`), onSuccess: () => { qc.invalidateQueries({ queryKey: ['student-catalog-course', id] }); toast.ok(t('course.requestSent')); nav('/payments') }, onError: (e) => toast.err(e instanceof Error ? e.message : t('common.somethingWrong')) })
   const enroll = useMutation({ mutationFn: () => post(`/student/courses/${id}/enroll`), onSuccess: () => { qc.invalidateQueries(); nav(`/courses/${id}`) }, onError: (e) => toast.err(e instanceof Error ? e.message : t('common.somethingWrong')) })
 
   if (q.isLoading) return <Loading label={t('common.loading')} />

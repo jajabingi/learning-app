@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     # (Useful on hosts without a shell. Remove the password variable afterwards.)
     bootstrap_admin_email: str = ""
     bootstrap_admin_password: str = ""
+    # Online card payments: empty = off (offline/manual payments only). 'sandbox' is a TEST double, ignored in production.
+    payment_provider: str = ""
     # Outgoing e-mail. Without SMTP_HOST, messages are only logged (development) and kept in memory (tests).
     smtp_host: str = ""
     smtp_port: int = 587

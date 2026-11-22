@@ -13,7 +13,7 @@ import { t } from '@/i18n'
 import { SignInMethods } from '../AuthExtra'
 import { duration, shortDate } from '@/lib/format'
 
-const NAV: [string, string, boolean][] = [['/my', 'nav.dashboard', true], ['/courses', 'nav.myCourses', false], ['/practice', 'nav.practice', false], ['/exams', 'nav.exams', false], ['/explore', 'nav.explore', false], ['/account', 'nav.account', false]]
+const NAV: [string, string, boolean][] = [['/my', 'nav.dashboard', true], ['/courses', 'nav.myCourses', false], ['/practice', 'nav.practice', false], ['/exams', 'nav.exams', false], ['/payments', 'nav.payments', false], ['/explore', 'nav.explore', false], ['/account', 'nav.account', false]]
 
 /** Student portal shell: right-to-left, full width, its own navigation. */
 export function StudentLayout() {
